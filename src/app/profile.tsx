@@ -2,18 +2,23 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
 import { Avatar, Button, StatusPill, Wordmark } from '@/components/ui';
+import { useAuth } from '@/state/auth-context';
 import { colors, radius, spacing, type } from '@/theme';
 
 export default function ProfileScreen() {
+  const { session, signOut } = useAuth();
+  const name = session?.name || 'KAJORA member';
+  const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+
   return (
     <AppShell activeRoute="profile">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Wordmark compact />
         <View style={styles.profileHeader}>
-          <Avatar initials="TA" size={66} />
+          <Avatar initials={initials} size={66} />
           <View style={styles.profileText}>
-            <Text style={styles.name}>Tobi A.</Text>
-            <Text style={styles.location}>Osogbo, Osun State</Text>
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.location}>{session?.location || 'Osun State'}</Text>
           </View>
           <StatusPill label="PHONE VERIFIED" tone="green" />
         </View>
@@ -39,6 +44,8 @@ export default function ProfileScreen() {
           </Text>
           <Button label="Review verification" onPress={() => {}} variant="secondary" />
         </View>
+
+        <Button label="Sign out" onPress={signOut} variant="danger" />
       </ScrollView>
     </AppShell>
   );

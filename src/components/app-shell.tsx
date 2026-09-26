@@ -1,17 +1,26 @@
 import type { PropsWithChildren } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { colors, contentWidth, radius, spacing } from '@/theme';
 
 type RouteName = 'home' | 'groups' | 'create' | 'profile' | 'none';
 
-const items: { key: Exclude<RouteName, 'none'>; label: string; route: '/' | '/groups' | '/create' | '/profile' }[] = [
-  { key: 'home', label: 'Home', route: '/' },
-  { key: 'groups', label: 'Groups', route: '/groups' },
-  { key: 'create', label: 'Post', route: '/create' },
-  { key: 'profile', label: 'Profile', route: '/profile' },
+type NavItem = {
+  key: Exclude<RouteName, 'none'>;
+  label: string;
+  route: '/' | '/groups' | '/create' | '/profile';
+  symbol: SymbolViewProps['name'];
+  selectedSymbol: SymbolViewProps['name'];
+};
+
+const items: NavItem[] = [
+  { key: 'home', label: 'Home', route: '/', symbol: { ios: 'house', android: 'home', web: 'home' }, selectedSymbol: { ios: 'house.fill', android: 'home', web: 'home' } },
+  { key: 'groups', label: 'Groups', route: '/groups', symbol: { ios: 'person.2', android: 'groups', web: 'groups' }, selectedSymbol: { ios: 'person.2.fill', android: 'groups', web: 'groups' } },
+  { key: 'create', label: 'Post', route: '/create', symbol: { ios: 'plus', android: 'add', web: 'add' }, selectedSymbol: { ios: 'plus', android: 'add', web: 'add' } },
+  { key: 'profile', label: 'Profile', route: '/profile', symbol: { ios: 'person.crop.circle', android: 'account_circle', web: 'account_circle' }, selectedSymbol: { ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' } },
 ];
 
 export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{ activeRoute?: RouteName }>) {
@@ -37,7 +46,11 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
                       selected && item.key !== 'create' && styles.navItemSelected,
                       pressed && styles.pressed,
                     ]}>
-                    {item.key === 'create' && <Text style={styles.plus}>＋</Text>}
+                    <SymbolView
+                      name={selected ? item.selectedSymbol : item.symbol}
+                      size={item.key === 'create' ? 20 : 22}
+                      tintColor={item.key === 'create' ? colors.paper : selected ? colors.greenDark : colors.muted}
+                    />
                     <Text
                       style={[
                         styles.navLabel,
@@ -85,6 +98,5 @@ const styles = StyleSheet.create({
   navLabel: { color: colors.muted, fontSize: 12, fontWeight: '600' },
   navLabelSelected: { color: colors.greenDark },
   createLabel: { color: colors.paper },
-  plus: { color: colors.paper, fontSize: 17, lineHeight: 18 },
   pressed: { opacity: 0.76 },
 });

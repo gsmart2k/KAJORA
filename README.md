@@ -241,6 +241,11 @@ The architecture decision and integration sequence are documented in [docs/ARCHI
 
 The repository now contains the first interactive vertical slice:
 
+- phone-first prototype authentication;
+- OTP verification and first-profile setup;
+- protected application routes;
+- persistent prototype sessions on web;
+- cross-platform bottom-navigation symbols;
 - public intention wall;
 - search and category filtering;
 - intention details;
@@ -250,7 +255,7 @@ The repository now contains the first interactive vertical slice:
 - new-intention publishing; and
 - a basic profile and trust-language screen.
 
-The prototype currently uses typed in-memory data, so changes reset when the application reloads. The initial Supabase schema is included under `supabase/migrations/` for the next integration phase.
+Use `2468` as the OTP in the prototype build. No SMS is sent yet. Authentication is ready to be connected to Supabase Phone Auth; marketplace data still uses typed in-memory state and resets when the application reloads. The initial Supabase schema is included under `supabase/migrations/` for the integration phase.
 
 ### Run locally
 
@@ -297,6 +302,6 @@ Future project documentation may include:
 
 ## Current status
 
-**Interactive vertical-slice prototype.**
+**Authenticated interactive vertical-slice prototype.**
 
-The intent-first model, preliminary visual system, main screens, typed local state, and initial database migration are implemented. The next phase is user-flow review followed by Supabase authentication and persistence integration.
+The phone-first onboarding flow, intent-first model, visual system, main screens, typed local state, and initial database migration are implemented. The next phase is connecting Supabase authentication and persistence.
