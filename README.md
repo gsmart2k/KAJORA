@@ -238,3 +238,65 @@ The application should support:
 The architecture decision and integration sequence are documented in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Working prototype
+
+The repository now contains the first interactive vertical slice:
+
+- public intention wall;
+- search and category filtering;
+- intention details;
+- interest expression and withdrawal;
+- active groups;
+- structured group decisions and conversation;
+- new-intention publishing; and
+- a basic profile and trust-language screen.
+
+The prototype currently uses typed in-memory data, so changes reset when the application reloads. The initial Supabase schema is included under `supabase/migrations/` for the next integration phase.
+
+### Run locally
+
+```bash
+npm install
+npm run start
+```
+
+Other useful checks:
+
+```bash
+npm run typecheck
+npx expo export --platform web
+```
+
+## Success measures for the pilot
+
+- Percentage of intentions receiving at least one interested person
+- Time to first interest
+- Percentage of groups reaching a final plan
+- Percentage of final plans confirmed by all required participants
+- Percentage of confirmed plans marked completed
+- Member withdrawal rate
+- Report and dispute rate
+- Repeat participation
+- Qualitative feedback from completed groups
+
+The primary pilot metric is the percentage of buying intentions that result in a completed shared purchase.
+
+## Documentation
+
+- [Product specification](docs/PRODUCT_SPEC.md)
+- [Technical architecture](docs/ARCHITECTURE.md)
+
+Future project documentation may include:
+
+- architecture decisions;
+- database model;
+- API contract;
+- design system;
+- moderation handbook;
+- pilot operations playbook; and
+- deployment guide.
+
+## Current status
+
+**Interactive vertical-slice prototype.**
+
+The intent-first model, preliminary visual system, main screens, typed local state, and initial database migration are implemented. The next phase is user-flow review followed by Supabase authentication and persistence integration.
