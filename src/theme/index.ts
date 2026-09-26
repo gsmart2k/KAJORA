@@ -19,26 +19,26 @@ export const colors = {
 export const spacing = {
   xxs: 4,
   xs: 6,
-  sm: 10,
-  md: 16,
-  lg: 22,
-  xl: 30,
-  xxl: 44,
+  sm: 8,
+  md: 14,
+  lg: 18,
+  xl: 24,
+  xxl: 36,
 } as const;
 
 export const radius = {
   sm: 8,
-  md: 14,
-  lg: 20,
+  md: 12,
+  lg: 16,
   full: 999,
 } as const;
 
 export const type = {
-  small: 13,
-  caption: 12,
-  body: 16,
-  title: 20,
-  display: 32,
+  small: 12,
+  caption: 11,
+  body: 15,
+  title: 18,
+  display: 28,
 } as const;
 
 export const contentWidth = 680;

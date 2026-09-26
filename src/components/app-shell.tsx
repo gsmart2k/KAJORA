@@ -30,7 +30,7 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
       <SafeAreaView edges={['top']} style={styles.shell}>
         <View style={styles.body}>{children}</View>
         {activeRoute !== 'none' && (
-          <View style={styles.navWrap}>
+          <SafeAreaView edges={['bottom']} style={styles.navWrap}>
             <View accessibilityRole="tablist" style={styles.nav}>
               {items.map((item) => {
                 const selected = activeRoute === item.key;
@@ -42,15 +42,19 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
                     onPress={() => router.navigate(item.route)}
                     style={({ pressed }) => [
                       styles.navItem,
-                      item.key === 'create' && styles.createItem,
-                      selected && item.key !== 'create' && styles.navItemSelected,
                       pressed && styles.pressed,
                     ]}>
-                    <SymbolView
-                      name={selected ? item.selectedSymbol : item.symbol}
-                      size={item.key === 'create' ? 20 : 22}
-                      tintColor={item.key === 'create' ? colors.paper : selected ? colors.greenDark : colors.muted}
-                    />
+                    {item.key === 'create' ? (
+                      <View style={styles.createIcon}>
+                        <SymbolView name={item.symbol} size={19} tintColor={colors.paper} />
+                      </View>
+                    ) : (
+                      <SymbolView
+                        name={selected ? item.selectedSymbol : item.symbol}
+                        size={21}
+                        tintColor={selected ? colors.greenDark : colors.muted}
+                      />
+                    )}
                     <Text
                       style={[
                         styles.navLabel,
@@ -63,7 +67,7 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
                 );
               })}
             </View>
-          </View>
+          </SafeAreaView>
         )}
       </SafeAreaView>
     </View>
@@ -80,23 +84,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   body: { flex: 1 },
-  navWrap: { backgroundColor: colors.canvas, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  navWrap: { backgroundColor: colors.paper, borderTopColor: colors.line, borderTopWidth: 1, paddingHorizontal: spacing.sm, paddingTop: spacing.xs },
   nav: {
     alignItems: 'center',
-    backgroundColor: colors.paper,
-    borderColor: colors.line,
-    borderRadius: radius.lg,
-    borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    minHeight: 62,
-    paddingHorizontal: spacing.sm,
+    minHeight: 52,
   },
-  navItem: { alignItems: 'center', borderRadius: radius.md, justifyContent: 'center', minWidth: 66, paddingVertical: 9 },
-  navItemSelected: { backgroundColor: colors.sageSoft },
-  createItem: { backgroundColor: colors.green, flexDirection: 'row', gap: 2, paddingHorizontal: 13 },
-  navLabel: { color: colors.muted, fontSize: 12, fontWeight: '600' },
+  navItem: { alignItems: 'center', gap: 2, justifyContent: 'center', minWidth: 58, paddingVertical: 4 },
+  createIcon: { alignItems: 'center', backgroundColor: colors.green, borderRadius: radius.full, height: 33, justifyContent: 'center', marginTop: -7, width: 33 },
+  navLabel: { color: colors.muted, fontSize: 10, fontWeight: '600' },
   navLabelSelected: { color: colors.greenDark },
-  createLabel: { color: colors.paper },
+  createLabel: { color: colors.greenDark },
   pressed: { opacity: 0.76 },
 });

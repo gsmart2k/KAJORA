@@ -58,12 +58,12 @@ export default function PhoneScreen() {
 
 const styles = StyleSheet.create({
   label: { color: colors.ink, fontSize: type.small, fontWeight: '700' },
-  phoneField: { alignItems: 'center', borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', minHeight: 56, overflow: 'hidden' },
+  phoneField: { alignItems: 'center', borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', minHeight: 50, overflow: 'hidden' },
   fieldError: { borderColor: colors.danger },
   prefix: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.sageSoft, borderRightColor: colors.line, borderRightWidth: 1, flexDirection: 'row', gap: spacing.xs, paddingHorizontal: spacing.md },
-  flag: { fontSize: 17 },
+  flag: { fontSize: 15 },
   prefixText: { color: colors.greenDark, fontSize: type.body, fontWeight: '700' },
-  input: { color: colors.ink, flex: 1, fontSize: 18, minHeight: 54, paddingHorizontal: spacing.md },
+  input: { color: colors.ink, flex: 1, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.md },
   error: { color: colors.danger, fontSize: type.small },
   help: { color: colors.muted, fontSize: 12, lineHeight: 18 },
   back: { color: colors.greenDark, fontSize: type.small, fontWeight: '700', textAlign: 'center' },

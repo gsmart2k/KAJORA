@@ -45,11 +45,9 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.intro}>
-          <Text style={styles.eyebrow}>PEOPLE BUYING NEAR YOU</Text>
-          <Text style={styles.heading}>Find people who need what you need.</Text>
-          <Text style={styles.subheading}>
-            Show interest first. Decide the product, price and sharing details together.
-          </Text>
+          <Text style={styles.eyebrow}>NEAR YOU</Text>
+          <Text style={styles.heading}>What are people sharing?</Text>
+          <Text style={styles.subheading}>Join an open plan or start one of your own.</Text>
         </View>
 
         <View style={styles.searchBox}>
@@ -131,7 +129,7 @@ const styles = StyleSheet.create({
   },
   alertDot: { backgroundColor: colors.clay, borderRadius: 4, height: 7, width: 7 },
   alertText: { color: colors.ink, fontSize: type.caption, fontWeight: '600' },
-  locationRow: { alignItems: 'center', flexDirection: 'row', marginTop: spacing.lg },
+  locationRow: { alignItems: 'center', flexDirection: 'row', marginTop: spacing.md },
   locationMark: {
     backgroundColor: colors.green,
     borderRadius: 5,
@@ -141,22 +139,22 @@ const styles = StyleSheet.create({
   },
   locationText: { color: colors.ink, fontSize: type.body, fontWeight: '600' },
   locationChange: { color: colors.green, fontSize: type.small, marginLeft: 'auto' },
-  intro: { marginTop: spacing.xl },
-  eyebrow: { color: colors.green, fontSize: 11, fontWeight: '800', letterSpacing: 1.4 },
+  intro: { marginTop: spacing.lg },
+  eyebrow: { color: colors.green, fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
   heading: {
     color: colors.ink,
-    fontSize: 32,
+    fontSize: type.display,
     fontWeight: '700',
-    letterSpacing: -0.8,
-    lineHeight: 38,
-    marginTop: spacing.sm,
+    letterSpacing: -0.55,
+    lineHeight: 33,
+    marginTop: spacing.xs,
     maxWidth: 430,
   },
   subheading: {
     color: colors.muted,
     fontSize: type.body,
-    lineHeight: 23,
-    marginTop: spacing.md,
+    lineHeight: 21,
+    marginTop: spacing.sm,
     maxWidth: 520,
   },
   searchBox: {
@@ -166,18 +164,18 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     flexDirection: 'row',
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
     paddingHorizontal: spacing.md,
   },
-  searchMark: { color: colors.green, fontSize: 23, marginRight: spacing.sm },
-  searchInput: { color: colors.ink, flex: 1, fontSize: type.body, paddingVertical: 15 },
-  filters: { gap: spacing.sm, paddingVertical: spacing.lg },
+  searchMark: { color: colors.green, fontSize: 20, marginRight: spacing.sm },
+  searchInput: { color: colors.ink, flex: 1, fontSize: type.body, paddingVertical: 12 },
+  filters: { gap: spacing.sm, paddingVertical: spacing.md },
   filter: {
     borderColor: colors.line,
     borderRadius: radius.full,
     borderWidth: 1,
     paddingHorizontal: spacing.md,
-    paddingVertical: 9,
+    paddingVertical: 8,
   },
   filterSelected: { backgroundColor: colors.green, borderColor: colors.green },
   filterText: { color: colors.muted, fontSize: type.small, fontWeight: '600' },
@@ -192,10 +190,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     borderWidth: 1,
     marginTop: spacing.md,
-    padding: spacing.xl,
+    padding: spacing.lg,
   },
   emptyTitle: { color: colors.ink, fontSize: type.title, fontWeight: '700' },
-  emptyBody: { color: colors.muted, fontSize: type.body, lineHeight: 23, marginTop: spacing.sm },
+  emptyBody: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm },
   emptyAction: { marginTop: spacing.lg },
   emptyActionText: { color: colors.green, fontSize: type.body, fontWeight: '700' },
 });

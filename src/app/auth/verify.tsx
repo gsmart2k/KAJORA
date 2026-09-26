@@ -53,12 +53,12 @@ export default function VerifyScreen() {
 
 const styles = StyleSheet.create({
   label: { color: colors.ink, fontSize: type.small, fontWeight: '700' },
-  codeInput: { borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, color: colors.ink, fontSize: 30, fontWeight: '700', letterSpacing: 14, minHeight: 62, paddingHorizontal: spacing.lg, textAlign: 'center' },
+  codeInput: { borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, color: colors.ink, fontSize: 26, fontWeight: '700', letterSpacing: 12, minHeight: 56, paddingHorizontal: spacing.md, textAlign: 'center' },
   codeError: { borderColor: colors.danger },
   error: { color: colors.danger, fontSize: type.small, lineHeight: 19 },
   testCode: { alignItems: 'center', backgroundColor: colors.sageSoft, borderRadius: radius.md, padding: spacing.md },
   testLabel: { color: colors.greenDark, fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
-  testValue: { color: colors.greenDark, fontSize: 24, fontWeight: '800', letterSpacing: 5, marginTop: spacing.xs },
+  testValue: { color: colors.greenDark, fontSize: 21, fontWeight: '800', letterSpacing: 4, marginTop: spacing.xs },
   testText: { color: colors.muted, fontSize: 11, marginTop: spacing.xs },
   back: { color: colors.greenDark, fontSize: type.small, fontWeight: '700', textAlign: 'center' },
 });
