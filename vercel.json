@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/intents/:id",
+      "destination": "/intents/[id].html"
+    },
+    {
+      "source": "/groups/:id",
+      "destination": "/groups/[id].html"
+    }
+  ]
+}
