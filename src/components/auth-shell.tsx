@@ -22,10 +22,11 @@ export function AuthShell({ children, eyebrow, title, description, footer }: Aut
           showsVerticalScrollIndicator={false}>
           <View style={styles.frame}>
             <Wordmark />
-            <View style={styles.rule} />
-            <Text style={styles.eyebrow}>{eyebrow}</Text>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.description}>{description}</Text>
+            <View style={styles.intro}>
+              <Text style={styles.eyebrow}>{eyebrow}</Text>
+              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.description}>{description}</Text>
+            </View>
             <View style={styles.card}>{children}</View>
             {footer ? <View style={styles.footer}>{footer}</View> : null}
           </View>
@@ -40,18 +41,20 @@ const styles = StyleSheet.create({
   keyboard: { flex: 1 },
   scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
   frame: { alignSelf: 'center', maxWidth: 470, width: '100%' },
-  rule: { backgroundColor: colors.green, height: 2, marginBottom: spacing.lg, marginTop: spacing.md, width: 36 },
+  intro: { marginTop: spacing.xl },
   eyebrow: { color: colors.clay, fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, lineHeight: 33, marginTop: spacing.sm },
   description: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm, maxWidth: 420 },
   card: {
     backgroundColor: colors.paper,
-    borderColor: colors.line,
     borderRadius: radius.lg,
-    borderWidth: 1,
     gap: spacing.md,
     marginTop: spacing.lg,
     padding: spacing.lg,
+    shadowColor: colors.greenDark,
+    shadowOffset: { height: 8, width: 0 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
   },
   footer: { marginTop: spacing.md },
 });
