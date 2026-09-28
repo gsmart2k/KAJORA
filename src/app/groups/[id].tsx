@@ -1,9 +1,10 @@
+import { useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
 import { Avatar, Button, SectionLabel, StatusPill } from '@/components/ui';
-import { groupDecisions, groupMessages } from '@/data/mock';
+import { groupDecisions } from '@/data/mock';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 import type { DecisionState } from '@/types';
@@ -18,10 +19,29 @@ const decisionTone: Record<DecisionState, 'green' | 'clay' | 'neutral'> = {
 export default function GroupRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { findIntent } = useKajora();
-  const intent = findIntent(id);
+  const { error, findGroup, findIntent, loadGroupMessages, messagesByGroup, sendGroupMessage } = useKajora();
+  const [messageBody, setMessageBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const group = findGroup(id);
+  const intent = group ? findIntent(group.sourcePostId) : undefined;
+  const messages = group ? messagesByGroup[group.id] ?? [] : [];
+  const memberInitials = intent
+    ? [...new Set([intent.creator.initials, ...messages.map((message) => message.initials)])].slice(0, 4)
+    : [];
 
-  if (!intent) return null;
+  useEffect(() => {
+    if (group) void loadGroupMessages(group.id);
+  }, [group, loadGroupMessages]);
+
+  if (!intent || !group) return null;
+
+  const send = async () => {
+    if (!messageBody.trim()) return;
+    setSending(true);
+    const sendError = await sendGroupMessage(group.id, messageBody);
+    setSending(false);
+    if (!sendError) setMessageBody('');
+  };
 
   return (
     <AppShell>
@@ -30,7 +50,7 @@ export default function GroupRoomScreen() {
           <Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>←</Text></Pressable>
           <View style={styles.headerTitle}>
             <Text style={styles.product}>{intent.product} group</Text>
-            <Text style={styles.groupMeta}>{intent.interestedCount} interested · {intent.area}</Text>
+            <Text style={styles.groupMeta}>{group.memberCount} members · {intent.area}</Text>
           </View>
           <Pressable><Text style={styles.more}>•••</Text></Pressable>
         </View>
@@ -42,8 +62,8 @@ export default function GroupRoomScreen() {
           </View>
 
           <View style={styles.membersRow}>
-            {['MA', 'TA', 'SA', 'KO'].map((initials) => <Avatar initials={initials} key={initials} size={34} />)}
-            <Text style={styles.membersText}>{intent.interestedCount} people in this room</Text>
+            {memberInitials.map((initials) => <Avatar initials={initials} key={initials} size={34} />)}
+            <Text style={styles.membersText}>{group.memberCount} people in this room</Text>
             <Text style={styles.invite}>Invite</Text>
           </View>
 
@@ -74,7 +94,7 @@ export default function GroupRoomScreen() {
 
           <SectionLabel>CONVERSATION</SectionLabel>
           <View style={styles.messages}>
-            {groupMessages.map((message) => (
+            {messages.map((message) => (
               <View key={message.id} style={[styles.messageRow, message.mine && styles.messageMine]}>
                 {!message.mine && <Avatar initials={message.initials} size={30} />}
                 <View style={[styles.message, message.mine && styles.messageBubbleMine]}>
@@ -85,11 +105,22 @@ export default function GroupRoomScreen() {
               </View>
             ))}
           </View>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
 
         <View style={styles.composer}>
-          <TextInput placeholder="Write to the group" placeholderTextColor={colors.muted} style={styles.composerInput} />
-          <Pressable style={styles.send}><Text style={styles.sendText}>Send</Text></Pressable>
+          <TextInput
+            onChangeText={setMessageBody}
+            onSubmitEditing={() => void send()}
+            placeholder="Write to the group"
+            placeholderTextColor={colors.muted}
+            returnKeyType="send"
+            style={styles.composerInput}
+            value={messageBody}
+          />
+          <Pressable disabled={sending || !messageBody.trim()} onPress={() => void send()} style={[styles.send, (sending || !messageBody.trim()) && styles.sendDisabled]}>
+            <Text style={styles.sendText}>{sending ? '…' : 'Send'}</Text>
+          </Pressable>
         </View>
       </View>
     </AppShell>
@@ -135,4 +166,6 @@ const styles = StyleSheet.create({
   composerInput: { backgroundColor: colors.paper, borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, color: colors.ink, flex: 1, minHeight: 42, paddingHorizontal: spacing.md },
   send: { backgroundColor: colors.green, borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12 },
   sendText: { color: colors.paper, fontSize: type.small, fontWeight: '700' },
+  sendDisabled: { opacity: 0.45 },
+  error: { color: colors.danger, fontSize: type.small, lineHeight: 19, marginTop: spacing.md },
 });

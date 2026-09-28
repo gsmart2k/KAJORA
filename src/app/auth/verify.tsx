@@ -9,30 +9,32 @@ import { colors, radius, spacing, type } from '@/theme';
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { pendingPhone, verifyOtp } = useAuth();
+  const { backendMode, pendingPhone, verifyOtp } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const codeLength = backendMode === 'supabase' ? 6 : 4;
 
-  const verify = () => {
-    if (!verifyOtp(code)) {
-      setError('That code is not correct. Use the test code shown below.');
-      return;
-    }
+  const verify = async () => {
+    setLoading(true);
+    const authError = await verifyOtp(code);
+    setLoading(false);
+    if (authError) setError(authError);
   };
 
   return (
     <AuthShell
-      description={`Enter the four-digit code sent to ${pendingPhone || 'your phone number'}.`}
+      description={`Enter the ${codeLength}-digit code sent to ${pendingPhone || 'your phone number'}.`}
       eyebrow="Step 2 of 3"
       title="Check your messages"
       footer={<Pressable onPress={() => router.back()}><Text style={styles.back}>← Change phone number</Text></Pressable>}>
       <Text style={styles.label}>Verification code</Text>
       <TextInput
-        accessibilityLabel="Four digit verification code"
+        accessibilityLabel={`${codeLength} digit verification code`}
         autoComplete="one-time-code"
         keyboardType="number-pad"
-        maxLength={4}
-        onChangeText={(value) => { setCode(value.replace(/\D/g, '').slice(0, 4)); setError(''); }}
+        maxLength={codeLength}
+        onChangeText={(value) => { setCode(value.replace(/\D/g, '').slice(0, codeLength)); setError(''); }}
         onSubmitEditing={verify}
         placeholder="••••"
         placeholderTextColor={colors.line}
@@ -41,12 +43,14 @@ export default function VerifyScreen() {
         value={code}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <View style={styles.testCode}>
-        <Text style={styles.testLabel}>PROTOTYPE CODE</Text>
-        <Text selectable style={styles.testValue}>{TEST_OTP}</Text>
-        <Text style={styles.testText}>No SMS is sent in this build.</Text>
-      </View>
-      <Button disabled={code.length !== 4} label="Verify number" onPress={verify} />
+      {backendMode === 'demo' ? (
+        <View style={styles.testCode}>
+          <Text style={styles.testLabel}>PROTOTYPE CODE</Text>
+          <Text selectable style={styles.testValue}>{TEST_OTP}</Text>
+          <Text style={styles.testText}>Add Supabase keys to enable real SMS.</Text>
+        </View>
+      ) : null}
+      <Button disabled={code.length !== codeLength} label="Verify number" loading={loading} onPress={verify} />
     </AuthShell>
   );
 }

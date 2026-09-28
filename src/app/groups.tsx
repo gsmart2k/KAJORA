@@ -8,8 +8,11 @@ import { colors, radius, spacing, type } from '@/theme';
 
 export default function GroupsScreen() {
   const router = useRouter();
-  const { interestedIds, intents } = useKajora();
-  const groups = intents.filter((intent) => interestedIds.has(intent.id));
+  const { error, findIntent, groups, isLoading } = useKajora();
+  const groupItems = groups.flatMap((group) => {
+    const intent = findIntent(group.sourcePostId);
+    return intent ? [{ group, intent }] : [];
+  });
 
   return (
     <AppShell activeRoute="groups">
@@ -19,36 +22,37 @@ export default function GroupsScreen() {
         <Text style={styles.lede}>People you’re planning a purchase with. Nothing here is a payment commitment.</Text>
 
         <View style={styles.list}>
-          {groups.map((group) => (
+          {groupItems.map(({ group, intent }) => (
             <Pressable
               key={group.id}
               onPress={() => router.push({ pathname: '/groups/[id]', params: { id: group.id } })}
               style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
               <View style={styles.cardTop}>
-                <Avatar initials={group.creator.initials} />
+                <Avatar initials={intent.creator.initials} />
                 <View style={styles.cardTitleWrap}>
-                  <Text style={styles.cardTitle}>{group.product} group</Text>
-                  <Text style={styles.cardMeta}>{group.area} · {group.interestedCount} interested</Text>
+                  <Text style={styles.cardTitle}>{intent.product} group</Text>
+                  <Text style={styles.cardMeta}>{intent.area} · {group.memberCount} members</Text>
                 </View>
-                <StatusPill label={group.status.replace('-', ' ').toUpperCase()} tone="green" />
+                <StatusPill label={group.state.replace('-', ' ').toUpperCase()} tone="green" />
               </View>
-              <Text numberOfLines={2} style={styles.cardBody}>{group.title}</Text>
-              <View style={styles.progressTrack}><View style={[styles.progress, { width: group.status === 'planning' ? '55%' : '30%' }]} /></View>
+              <Text numberOfLines={2} style={styles.cardBody}>{intent.title}</Text>
+              <View style={styles.progressTrack}><View style={[styles.progress, { width: group.state === 'planning' ? '55%' : '30%' }]} /></View>
               <View style={styles.cardFooter}>
-                <Text style={styles.nextStep}>{group.status === 'planning' ? 'Next: agree supplier and final amount' : 'Next: gather more interested people'}</Text>
+                <Text style={styles.nextStep}>{group.state === 'planning' ? 'Next: agree supplier and final amount' : 'Next: gather more interested people'}</Text>
                 <Text style={styles.arrow}>→</Text>
               </View>
             </Pressable>
           ))}
         </View>
 
-        {groups.length === 0 && (
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {groupItems.length === 0 && !isLoading ? (
           <View style={styles.empty}>
             <Text style={styles.emptyTitle}>No active groups yet.</Text>
             <Text style={styles.emptyText}>Show interest in a public intention to begin planning with others.</Text>
             <Pressable onPress={() => router.navigate('/')}><Text style={styles.discover}>Discover intentions</Text></Pressable>
           </View>
-        )}
+        ) : null}
       </ScrollView>
     </AppShell>
   );
@@ -75,4 +79,5 @@ const styles = StyleSheet.create({
   emptyTitle: { color: colors.ink, fontSize: type.title, fontWeight: '700' },
   emptyText: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm },
   discover: { color: colors.green, fontSize: type.body, fontWeight: '700', marginTop: spacing.lg },
+  error: { color: colors.danger, fontSize: type.small, lineHeight: 19, marginTop: spacing.md },
 });

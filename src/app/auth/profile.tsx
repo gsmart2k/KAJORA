@@ -12,12 +12,18 @@ export default function ProfileSetupScreen() {
   const { completeProfile } = useAuth();
   const [name, setName] = useState('');
   const [location, setLocation] = useState('Osogbo');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const initials = name.trim() ? name.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase() : 'KJ';
   const ready = name.trim().length >= 2;
 
-  const finish = () => {
+  const finish = async () => {
     if (!ready) return;
-    completeProfile({ name: name.trim(), location: `${location}, Osun State` });
+    setError('');
+    setLoading(true);
+    const profileError = await completeProfile({ name: name.trim(), location: `${location}, Osun State` });
+    setLoading(false);
+    if (profileError) setError(profileError);
   };
 
   return (
@@ -62,7 +68,8 @@ export default function ProfileSetupScreen() {
           );
         })}
       </View>
-      <Button disabled={!ready} label="Enter KAJORA" onPress={finish} />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Button disabled={!ready} label="Enter KAJORA" loading={loading} onPress={finish} />
     </AuthShell>
   );
 }
@@ -79,5 +86,6 @@ const styles = StyleSheet.create({
   locationSelected: { backgroundColor: colors.green, borderColor: colors.green },
   locationText: { color: colors.muted, fontSize: type.small, fontWeight: '700' },
   locationTextSelected: { color: colors.paper },
+  error: { color: colors.danger, fontSize: type.small, lineHeight: 19 },
   privacy: { color: colors.muted, fontSize: 12, textAlign: 'center' },
 });

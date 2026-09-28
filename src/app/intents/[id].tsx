@@ -1,15 +1,19 @@
+import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
 import { Avatar, Button, SectionLabel, StatusPill, Wordmark } from '@/components/ui';
+import { useAuth } from '@/state/auth-context';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 
 export default function IntentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { expressInterest, findIntent, interestedIds, withdrawInterest } = useKajora();
+  const { session } = useAuth();
+  const { error, expressInterest, findIntent, getGroupForIntent, interestedIds, withdrawInterest } = useKajora();
+  const [loading, setLoading] = useState(false);
   const intent = findIntent(id);
 
   if (!intent) {
@@ -24,14 +28,19 @@ export default function IntentDetailScreen() {
   }
 
   const interested = interestedIds.has(intent.id);
+  const isOwner = Boolean(intent.creatorId && intent.creatorId === session?.userId);
   const available = intent.type === 'available-share';
 
-  const handleInterest = () => {
+  const handleInterest = async () => {
     if (interested) {
-      router.push({ pathname: '/groups/[id]', params: { id: intent.id } });
+      const group = getGroupForIntent(intent.id);
+      if (group) router.push({ pathname: '/groups/[id]', params: { id: group.id } });
       return;
     }
-    expressInterest(intent.id);
+    setLoading(true);
+    const groupId = await expressInterest(intent.id);
+    setLoading(false);
+    if (groupId) router.push({ pathname: '/groups/[id]', params: { id: groupId } });
   };
 
   return (
@@ -103,12 +112,15 @@ export default function IntentDetailScreen() {
 
         <View style={styles.actions}>
           <Button
-            label={interested ? 'Open group room' : available ? 'Request this share' : "I'm interested"}
+            disabled={isOwner}
+            label={isOwner ? 'You started this plan' : interested ? 'Open group room' : available ? 'Request this share' : "I'm interested"}
+            loading={loading}
             onPress={handleInterest}
           />
-          {interested && (
-            <Button label="Withdraw interest" onPress={() => withdrawInterest(intent.id)} variant="secondary" />
-          )}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {interested ? (
+            <Button label="Withdraw interest" onPress={() => void withdrawInterest(intent.id)} variant="secondary" />
+          ) : null}
         </View>
       </ScrollView>
     </AppShell>
@@ -152,5 +164,6 @@ const styles = StyleSheet.create({
   interestHelp: { color: colors.muted, fontSize: 11, marginTop: 4, maxWidth: 260 },
   avatarStack: { flexDirection: 'row' },
   actions: { gap: spacing.sm, marginTop: spacing.lg },
+  error: { color: colors.danger, fontSize: type.small, lineHeight: 19, textAlign: 'center' },
   missing: { gap: spacing.lg, padding: spacing.xl },
 });

@@ -3,10 +3,12 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppShell } from '@/components/app-shell';
 import { Avatar, Button, StatusPill, Wordmark } from '@/components/ui';
 import { useAuth } from '@/state/auth-context';
+import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 
 export default function ProfileScreen() {
   const { session, signOut } = useAuth();
+  const { groups, intents } = useKajora();
   const name = session?.name || 'KAJORA member';
   const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
 
@@ -24,14 +26,14 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.stats}>
-          <Stat label="Intentions" value="1" />
-          <Stat label="Active groups" value="1" />
+          <Stat label="Intentions" value={String(intents.filter((intent) => intent.creatorId === session?.userId).length)} />
+          <Stat label="Active groups" value={String(groups.length)} />
           <Stat label="Completed" value="0" />
         </View>
 
         <Text style={styles.sectionTitle}>Your KAJORA</Text>
         <View style={styles.settings}>
-          <Setting title="Discovery area" value="Osogbo and nearby" />
+          <Setting title="Discovery area" value={session?.location || 'Osogbo and nearby'} />
           <Setting title="Interest alerts" value="Livestock, foodstuff" />
           <Setting title="Privacy" value="Phone number hidden" />
           <Setting title="Safety and reports" value="No open reports" />

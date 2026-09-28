@@ -239,23 +239,28 @@ The architecture decision and integration sequence are documented in [docs/ARCHI
 
 ## Working prototype
 
-The repository now contains the first interactive vertical slice:
+The repository now contains a functional alpha vertical slice:
 
-- phone-first prototype authentication;
-- OTP verification and first-profile setup;
+- real Supabase phone OTP authentication when configured;
+- persistent demo authentication when Supabase is not configured;
+- first-profile setup and persisted sessions;
 - protected application routes;
-- persistent prototype sessions on web;
 - cross-platform bottom-navigation symbols;
 - public intention wall;
 - search and category filtering;
 - intention details;
-- interest expression and withdrawal;
-- active groups;
+- persisted buying intentions;
+- persisted interest expression and withdrawal;
+- automatic group creation when another member shows interest;
+- member-only active groups;
 - structured group decisions and conversation;
+- persisted group messages;
 - new-intention publishing; and
 - a basic profile and trust-language screen.
 
-Use `2468` as the OTP in the prototype build. No SMS is sent yet. Authentication is ready to be connected to Supabase Phone Auth; marketplace data still uses typed in-memory state and resets when the application reloads. The initial Supabase schema is included under `supabase/migrations/` for the integration phase.
+Without Supabase environment variables, KAJORA automatically runs in demo mode. Use `2468` as the demo OTP. Demo sessions, intentions, interests, groups, and messages persist on the device.
+
+With Supabase configured, the app uses real SMS OTPs and shared cloud data, so two people can sign in with different phone numbers and complete the end-to-end alpha journey.
 
 ### Run locally
 
@@ -268,8 +273,51 @@ Other useful checks:
 
 ```bash
 npm run typecheck
-npx expo export --platform web
+npm run build:web
 ```
+
+## Connect Supabase
+
+KAJORA never needs a Supabase service-role key in the app. Only use the public project URL and publishable key.
+
+1. Create a Supabase project.
+2. Open the Supabase SQL editor and run these files in order:
+   - `supabase/migrations/202609260001_initial_schema.sql`
+   - `supabase/migrations/202609280001_alpha_helpers.sql`
+3. In Supabase Authentication, enable Phone sign-in and configure an SMS provider.
+4. Copy the environment template:
+
+```bash
+cp .env.example .env.local
+```
+
+5. Replace the placeholders in `.env.local`:
+
+```dotenv
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+```
+
+6. Restart Expo after changing environment variables:
+
+```bash
+npm run start
+```
+
+For a Vercel deployment, add the same two environment variables in the project settings and redeploy. Do not commit `.env.local`.
+
+### Alpha test script
+
+Use two real phone numbers or devices:
+
+1. Sign in as person A, finish the profile, and publish a buying intention.
+2. Sign out, then sign in as person B.
+3. Open person A’s intention and tap **I’m interested**.
+4. KAJORA creates the group automatically and opens its room.
+5. Send a group message as person B.
+6. Sign back in as person A and open **Groups** to see the same group and conversation.
+
+Interest is non-binding, and KAJORA does not collect or hold purchase funds in this alpha.
 
 ## Success measures for the pilot
 
@@ -302,6 +350,6 @@ Future project documentation may include:
 
 ## Current status
 
-**Authenticated interactive vertical-slice prototype.**
+**Persistent multi-user alpha, ready for Supabase project configuration.**
 
-The phone-first onboarding flow, intent-first model, visual system, main screens, typed local state, and initial database migration are implemented. The next phase is connecting Supabase authentication and persistence.
+The phone-first onboarding flow, intent-first model, visual system, main screens, persisted demo mode, Supabase authentication, database persistence, automatic group creation, and group conversation are implemented. Live multi-user mode becomes active after the project environment values, database migrations, and SMS provider are configured.

@@ -4,6 +4,7 @@ export type IntentStatus = 'open' | 'forming' | 'planning' | 'awaiting-confirmat
 
 export type Intent = {
   id: string;
+  creatorId?: string;
   type: PostType;
   creator: {
     name: string;
@@ -35,6 +36,13 @@ export type CreateIntentInput = {
   timing: string;
   desiredShare: string;
   description: string;
+};
+
+export type BuyingGroup = {
+  id: string;
+  sourcePostId: string;
+  state: IntentStatus;
+  memberCount: number;
 };
 
 export type DecisionState = 'Agreed' | 'Discussing' | 'Suggested' | 'Not discussed';

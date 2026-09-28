@@ -18,21 +18,31 @@ export default function CreateScreen() {
   const [timing, setTiming] = useState('');
   const [location, setLocation] = useState('Osogbo, Osun State');
   const [description, setDescription] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const ready = product.trim() && title.trim() && share.trim() && timing.trim() && location.trim() && description.trim();
 
-  const publish = () => {
+  const publish = async () => {
     if (!ready) return;
-    const id = createIntent({
-      category,
-      product: product.trim(),
-      title: title.trim(),
-      desiredShare: share.trim(),
-      timing: timing.trim(),
-      location: location.trim(),
-      description: description.trim(),
-    });
-    router.replace({ pathname: '/intents/[id]', params: { id } });
+    setError('');
+    setLoading(true);
+    try {
+      const id = await createIntent({
+        category,
+        product: product.trim(),
+        title: title.trim(),
+        desiredShare: share.trim(),
+        timing: timing.trim(),
+        location: location.trim(),
+        description: description.trim(),
+      });
+      router.replace({ pathname: '/intents/[id]', params: { id } });
+    } catch (publishError) {
+      setError(publishError instanceof Error ? publishError.message : 'The buying intention could not be published.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,7 +107,8 @@ export default function CreateScreen() {
             </Text>
           </View>
 
-          <Button disabled={!ready} label="Publish intention" onPress={publish} />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Button disabled={!ready} label="Publish intention" loading={loading} onPress={publish} />
         </ScrollView>
       </KeyboardAvoidingView>
     </AppShell>
@@ -140,4 +151,5 @@ const styles = StyleSheet.create({
   reminder: { backgroundColor: colors.sageSoft, borderRadius: radius.md, marginBottom: spacing.md, marginTop: spacing.lg, padding: spacing.md },
   reminderTitle: { color: colors.greenDark, fontSize: type.small, fontWeight: '700' },
   reminderBody: { color: colors.muted, fontSize: type.small, lineHeight: 19, marginTop: 4 },
+  error: { color: colors.danger, fontSize: type.small, lineHeight: 19 },
 });

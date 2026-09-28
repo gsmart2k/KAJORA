@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { AppShell } from '@/components/app-shell';
@@ -17,7 +17,7 @@ const categories = [
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { intents } = useKajora();
+  const { error, intents, isLoading, refresh } = useKajora();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
 
@@ -110,6 +110,22 @@ export default function HomeScreen() {
           <Text style={styles.sectionCount}>{visibleIntents.length} nearby</Text>
         </View>
 
+        {isLoading ? (
+          <View style={styles.loadingState}>
+            <ActivityIndicator color={colors.green} />
+            <Text style={styles.loadingText}>Finding plans near you…</Text>
+          </View>
+        ) : null}
+
+        {error ? (
+          <View style={styles.errorState}>
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable onPress={() => void refresh()}>
+              <Text style={styles.retryText}>Try again</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         <View style={styles.cards}>
           {visibleIntents.map((intent) => (
             <IntentCard
@@ -120,7 +136,7 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {visibleIntents.length === 0 ? (
+        {visibleIntents.length === 0 && !isLoading ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>🌱</Text>
             <Text style={styles.emptyTitle}>Nothing matching that yet.</Text>
@@ -178,6 +194,11 @@ const styles = StyleSheet.create({
   categoryText: { color: colors.muted, fontSize: 10, fontWeight: '700', marginTop: spacing.xs },
   categoryTextSelected: { color: colors.white },
   cards: { gap: spacing.md, marginTop: spacing.md },
+  loadingState: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  loadingText: { color: colors.muted, fontSize: type.small },
+  errorState: { backgroundColor: colors.claySoft, borderRadius: radius.md, gap: spacing.sm, marginTop: spacing.md, padding: spacing.md },
+  errorText: { color: colors.danger, fontSize: type.small, lineHeight: 19 },
+  retryText: { color: colors.greenDark, fontSize: type.small, fontWeight: '800' },
   emptyState: { alignItems: 'center', backgroundColor: colors.paper, borderRadius: radius.lg, marginTop: spacing.md, padding: spacing.xl },
   emptyIcon: { fontSize: 30 },
   emptyTitle: { color: colors.ink, fontSize: type.title, fontWeight: '700', marginTop: spacing.sm },

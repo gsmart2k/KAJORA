@@ -17,12 +17,21 @@ export default function PhoneScreen() {
   const { beginPhoneSignIn } = useAuth();
   const [phone, setPhone] = useState('');
   const [attempted, setAttempted] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const valid = phone.length === 10;
 
-  const continueToCode = () => {
+  const continueToCode = async () => {
     setAttempted(true);
     if (!valid) return;
-    beginPhoneSignIn(`+234${phone}`);
+    setError('');
+    setLoading(true);
+    const authError = await beginPhoneSignIn(`+234${phone}`);
+    setLoading(false);
+    if (authError) {
+      setError(authError);
+      return;
+    }
     router.push('/auth/verify');
   };
 
@@ -50,7 +59,8 @@ export default function PhoneScreen() {
         />
       </View>
       {attempted && !valid ? <Text style={styles.error}>Enter the 10 digits after +234.</Text> : null}
-      <Button disabled={!valid} label="Send verification code" onPress={continueToCode} />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Button disabled={!valid} label="Send verification code" loading={loading} onPress={continueToCode} />
       <Text style={styles.help}>For example, 0801 234 5678 becomes +234 801 234 5678.</Text>
     </AuthShell>
   );
