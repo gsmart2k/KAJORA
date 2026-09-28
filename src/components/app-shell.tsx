@@ -32,19 +32,19 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
         <View style={styles.body}>{children}</View>
         {activeRoute !== 'none' && (
           <SafeAreaView edges={['bottom']} style={styles.navWrap}>
-            <Pressable
-              accessibilityLabel="Start a buying plan"
-              accessibilityRole="button"
-              accessibilityState={{ selected: activeRoute === 'create' }}
-              onPress={() => router.navigate('/create')}
-              style={({ pressed }) => [
-                styles.floatingAction,
-                activeRoute === 'create' && styles.floatingActionSelected,
-                pressed && styles.floatingActionPressed,
-              ]}>
-              <SymbolView name={addSymbol} size={25} tintColor={colors.white} />
-              <Text style={styles.floatingActionLabel}>Start</Text>
-            </Pressable>
+            {activeRoute !== 'create' ? (
+              <Pressable
+                accessibilityLabel="Start a buying plan"
+                accessibilityRole="button"
+                onPress={() => router.navigate('/create')}
+                style={({ pressed }) => [
+                  styles.floatingAction,
+                  pressed && styles.floatingActionPressed,
+                ]}>
+                <SymbolView name={addSymbol} size={25} tintColor={colors.white} />
+                <Text style={styles.floatingActionLabel}>Start</Text>
+              </Pressable>
+            ) : null}
             <View accessibilityRole="tablist" style={styles.nav}>
               {items.map((item) => {
                 const selected = activeRoute === item.key;
@@ -133,7 +133,6 @@ const styles = StyleSheet.create({
     width: 68,
     zIndex: 10,
   },
-  floatingActionSelected: { backgroundColor: colors.greenDark },
   floatingActionPressed: { opacity: 0.86, transform: [{ scale: 0.96 }] },
   floatingActionLabel: { color: colors.white, fontSize: 9, fontWeight: '800', marginTop: -1 },
   pressed: { opacity: 0.76 },
