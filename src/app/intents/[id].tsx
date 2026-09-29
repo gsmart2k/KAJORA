@@ -76,7 +76,7 @@ export default function IntentDetailScreen() {
           <View style={styles.creatorBody}>
             <Text style={styles.creatorName}>Posted by {intent.creator.name}</Text>
             <Text style={styles.creatorMeta}>
-              Phone verified · {intent.creator.completedGroups} completed {intent.creator.completedGroups === 1 ? 'group' : 'groups'}
+              {intent.creator.phoneVerified ? 'Identity verified' : 'KAJORA account'} · {intent.creator.completedGroups} completed {intent.creator.completedGroups === 1 ? 'group' : 'groups'}
             </Text>
           </View>
         </View>

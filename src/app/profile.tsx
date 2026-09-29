@@ -22,7 +22,7 @@ export default function ProfileScreen() {
             <Text style={styles.name}>{name}</Text>
             <Text style={styles.location}>{session?.location || 'Osun State'}</Text>
           </View>
-          <StatusPill label="PHONE VERIFIED" tone="green" />
+          <StatusPill label="ACCOUNT ACTIVE" tone="green" />
         </View>
 
         <View style={styles.stats}>
@@ -35,14 +35,14 @@ export default function ProfileScreen() {
         <View style={styles.settings}>
           <Setting title="Discovery area" value={session?.location || 'Osogbo and nearby'} />
           <Setting title="Interest alerts" value="Livestock, foodstuff" />
-          <Setting title="Privacy" value="Phone number hidden" />
+          <Setting title="Privacy" value="Email address hidden" />
           <Setting title="Safety and reports" value="No open reports" />
         </View>
 
         <View style={styles.identityCard}>
           <Text style={styles.identityTitle}>Build trust gradually</Text>
           <Text style={styles.identityText}>
-            KAJORA will show exactly what has been verified. A phone check never means a product or seller has been inspected.
+            An active account does not mean a product, organiser or seller has been inspected. Trust grows through completed groups and clear agreements.
           </Text>
           <Button label="Review verification" onPress={() => {}} variant="secondary" />
         </View>

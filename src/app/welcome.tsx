@@ -36,8 +36,8 @@ export default function WelcomeScreen() {
           </View>
         ))}
       </View>
-      <Button label="Continue with phone number" onPress={() => router.push('/auth/phone')} />
-      <Text style={styles.note}>KAJORA will never display your phone number on the public wall.</Text>
+      <Button label="Create an account" onPress={() => router.push('/auth/phone')} />
+      <Text style={styles.note}>Your email address is never displayed on the public wall.</Text>
     </AuthShell>
   );
 }

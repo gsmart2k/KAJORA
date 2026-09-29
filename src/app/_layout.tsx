@@ -34,7 +34,6 @@ function RootNavigator() {
       <Stack.Protected guard={!session}>
         <Stack.Screen name="welcome" />
         <Stack.Screen name="auth/phone" />
-        <Stack.Screen name="auth/verify" />
       </Stack.Protected>
       <Stack.Protected guard={Boolean(session && !session.profileComplete)}>
         <Stack.Screen name="auth/profile" />

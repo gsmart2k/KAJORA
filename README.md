@@ -241,7 +241,7 @@ The architecture decision and integration sequence are documented in [docs/ARCHI
 
 The repository now contains a functional alpha vertical slice:
 
-- real Supabase phone OTP authentication when configured;
+- Supabase email-and-password authentication for the closed alpha;
 - persistent demo authentication when Supabase is not configured;
 - first-profile setup and persisted sessions;
 - protected application routes;
@@ -258,9 +258,9 @@ The repository now contains a functional alpha vertical slice:
 - new-intention publishing; and
 - a basic profile and trust-language screen.
 
-Without Supabase environment variables, KAJORA automatically runs in demo mode. Use `2468` as the demo OTP. Demo sessions, intentions, interests, groups, and messages persist on the device.
+Without Supabase environment variables, KAJORA automatically runs in demo mode. Demo sessions, intentions, interests, groups, and messages persist on the device.
 
-With Supabase configured, the app uses real SMS OTPs and shared cloud data, so two people can sign in with different phone numbers and complete the end-to-end alpha journey.
+With Supabase configured, the app uses email-and-password accounts and shared cloud data, so two people can complete the end-to-end alpha journey. Phone OTP remains the intended public-launch authentication method once an appropriate Nigerian SMS provider is available.
 
 ### Run locally
 
@@ -284,21 +284,22 @@ KAJORA never needs a Supabase service-role key in the app. Only use the public p
 2. Open the Supabase SQL editor and run these files in order:
    - `supabase/migrations/202609260001_initial_schema.sql`
    - `supabase/migrations/202609280001_alpha_helpers.sql`
-3. In Supabase Authentication, enable Phone sign-in and configure an SMS provider.
-4. Copy the environment template:
+3. In Supabase Authentication, enable the Email provider and set a minimum password length of at least eight characters.
+4. For a closed alpha without an email delivery provider, create the test users in Authentication > Users and keep public sign-ups disabled. Do not disable email confirmation for a public launch.
+5. Copy the environment template:
 
 ```bash
 cp .env.example .env.local
 ```
 
-5. Replace the placeholders in `.env.local`:
+6. Replace the placeholders in `.env.local`:
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 ```
 
-6. Restart Expo after changing environment variables:
+7. Restart Expo after changing environment variables:
 
 ```bash
 npm run start
@@ -308,7 +309,7 @@ For a Vercel deployment, add the same two environment variables in the project s
 
 ### Alpha test script
 
-Use two real phone numbers or devices:
+Use two separate email accounts or devices:
 
 1. Sign in as person A, finish the profile, and publish a buying intention.
 2. Sign out, then sign in as person B.
@@ -350,6 +351,6 @@ Future project documentation may include:
 
 ## Current status
 
-**Persistent multi-user alpha, ready for Supabase project configuration.**
+**Persistent multi-user alpha with Supabase email accounts.**
 
-The phone-first onboarding flow, intent-first model, visual system, main screens, persisted demo mode, Supabase authentication, database persistence, automatic group creation, and group conversation are implemented. Live multi-user mode becomes active after the project environment values, database migrations, and SMS provider are configured.
+The account onboarding flow, intent-first model, visual system, main screens, persisted demo mode, Supabase authentication, database persistence, automatic group creation, and group conversation are implemented. Phone verification remains on the roadmap for the public pilot once a suitable SMS provider is available.

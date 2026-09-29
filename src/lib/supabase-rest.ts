@@ -15,6 +15,7 @@ export const isSupabaseConfigured = Boolean(
 
 type SupabaseUser = {
   id: string;
+  email?: string;
   phone?: string;
 };
 
@@ -121,22 +122,29 @@ function withExpiry(session: SupabaseSession): SupabaseSession {
   return { ...session, expires_at: Math.floor(Date.now() / 1000) + session.expires_in };
 }
 
-export async function sendPhoneOtp(phone: string) {
-  await request('/auth/v1/otp', {
-    body: JSON.stringify({ phone, create_user: true }),
-    method: 'POST',
-  });
-}
-
-export async function verifyPhoneOtp(phone: string, token: string) {
-  const session = withExpiry(
-    await request<SupabaseSession>('/auth/v1/verify', {
-      body: JSON.stringify({ phone, token, type: 'sms' }),
-      method: 'POST',
-    }),
-  );
+async function persistAuthResponse(response: Partial<SupabaseSession>) {
+  if (!response.access_token || !response.refresh_token || !response.expires_in || !response.user) {
+    throw new Error('This account still needs confirmation before it can sign in.');
+  }
+  const session = withExpiry(response as SupabaseSession);
   await writeStoredJson(SESSION_KEY, session);
   return session;
+}
+
+export async function signInWithEmailPassword(email: string, password: string) {
+  const response = await request<Partial<SupabaseSession>>('/auth/v1/token?grant_type=password', {
+    body: JSON.stringify({ email, password }),
+    method: 'POST',
+  });
+  return persistAuthResponse(response);
+}
+
+export async function signUpWithEmailPassword(email: string, password: string) {
+  const response = await request<Partial<SupabaseSession>>('/auth/v1/signup', {
+    body: JSON.stringify({ email, password }),
+    method: 'POST',
+  });
+  return persistAuthResponse(response);
 }
 
 async function refreshSession(session: SupabaseSession) {

@@ -13,19 +13,20 @@ import {
   fetchProfile,
   isSupabaseConfigured,
   restoreSupabaseSession,
-  sendPhoneOtp,
+  signInWithEmailPassword,
   signOutSupabase,
+  signUpWithEmailPassword,
   type SupabaseSession,
   updateProfile,
-  verifyPhoneOtp,
 } from '@/lib/supabase-rest';
 
-const DEMO_SESSION_KEY = 'kajora.demo.session.v2';
-export const TEST_OTP = '2468';
+const DEMO_SESSION_KEY = 'kajora.demo.session.v3';
+
+export type EmailAuthAction = 'sign-in' | 'sign-up';
 
 export type KajoraSession = {
   userId: string;
-  phone: string;
+  email: string;
   name: string;
   location: string;
   profileComplete: boolean;
@@ -35,11 +36,9 @@ export type KajoraSession = {
 type AuthContextValue = {
   backendMode: 'demo' | 'supabase';
   isLoading: boolean;
-  pendingPhone: string;
   session: KajoraSession | null;
   supabaseSession: SupabaseSession | null;
-  beginPhoneSignIn: (phone: string) => Promise<string | null>;
-  verifyOtp: (code: string) => Promise<string | null>;
+  authenticateWithEmail: (email: string, password: string, action: EmailAuthAction) => Promise<string | null>;
   completeProfile: (details: Pick<KajoraSession, 'name' | 'location'>) => Promise<string | null>;
   signOut: () => Promise<void>;
 };
@@ -55,10 +54,10 @@ function sessionFromProfile(remote: SupabaseSession, profile: Awaited<ReturnType
     profile?.discovery_area && profile.display_name && profile.display_name !== 'New member',
   );
   return {
+    email: remote.user.email ?? '',
     location: profile?.discovery_area ?? 'Osogbo, Osun State',
     mode: 'supabase',
     name: profileComplete ? profile?.display_name ?? '' : '',
-    phone: remote.user.phone ?? '',
     profileComplete,
     userId: remote.user.id,
   };
@@ -67,7 +66,6 @@ function sessionFromProfile(remote: SupabaseSession, profile: Awaited<ReturnType
 export function AuthProvider({ children }: PropsWithChildren) {
   const backendMode = isSupabaseConfigured ? 'supabase' : 'demo';
   const [isLoading, setIsLoading] = useState(true);
-  const [pendingPhone, setPendingPhone] = useState('');
   const [session, setSession] = useState<KajoraSession | null>(null);
   const [supabaseSession, setSupabaseSession] = useState<SupabaseSession | null>(null);
 
@@ -99,30 +97,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  const beginPhoneSignIn = useCallback(async (phone: string) => {
-    setPendingPhone(phone);
-    if (!isSupabaseConfigured) return null;
-    try {
-      await sendPhoneOtp(phone);
-      return null;
-    } catch (error) {
-      return errorMessage(error);
-    }
-  }, []);
-
-  const verifyOtp = useCallback(
-    async (code: string) => {
-      if (!pendingPhone) return 'Enter your phone number again.';
-
+  const authenticateWithEmail = useCallback(
+    async (email: string, password: string, action: EmailAuthAction) => {
       if (!isSupabaseConfigured) {
-        if (code !== TEST_OTP) return 'That prototype code is not correct.';
         const nextSession: KajoraSession = {
+          email,
           location: 'Osogbo, Osun State',
           mode: 'demo',
           name: '',
-          phone: pendingPhone,
           profileComplete: false,
-          userId: 'demo-current-user',
+          userId: `demo-${email.toLowerCase()}`,
         };
         setSession(nextSession);
         await writeStoredJson(DEMO_SESSION_KEY, nextSession);
@@ -130,7 +114,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
 
       try {
-        const remote = await verifyPhoneOtp(pendingPhone, code);
+        const remote = action === 'sign-up'
+          ? await signUpWithEmailPassword(email, password)
+          : await signInWithEmailPassword(email, password);
         const profile = await fetchProfile(remote);
         setSupabaseSession(remote);
         setSession(sessionFromProfile(remote, profile));
@@ -139,7 +125,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         return errorMessage(error);
       }
     },
-    [pendingPhone],
+    [],
   );
 
   const completeProfile = useCallback(
@@ -163,26 +149,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   const signOut = useCallback(async () => {
-    if (isSupabaseConfigured) await signOutSupabase(supabaseSession);
-    else await removeStoredValue(DEMO_SESSION_KEY);
-    setSession(null);
-    setSupabaseSession(null);
-    setPendingPhone('');
+    try {
+      if (isSupabaseConfigured) await signOutSupabase(supabaseSession);
+      else await removeStoredValue(DEMO_SESSION_KEY);
+    } finally {
+      setSession(null);
+      setSupabaseSession(null);
+    }
   }, [supabaseSession]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
+      authenticateWithEmail,
       backendMode,
-      beginPhoneSignIn,
       completeProfile,
       isLoading,
-      pendingPhone,
       session,
       signOut,
       supabaseSession,
-      verifyOtp,
     }),
-    [backendMode, beginPhoneSignIn, completeProfile, isLoading, pendingPhone, session, signOut, supabaseSession, verifyOtp],
+    [authenticateWithEmail, backendMode, completeProfile, isLoading, session, signOut, supabaseSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

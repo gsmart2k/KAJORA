@@ -55,6 +55,13 @@ const demoInitialState: DataState = {
   messagesByGroup: { 'rice-otaefun': initialGroupMessages },
 };
 
+const emptyRemoteState: DataState = {
+  groups: [],
+  intents: [],
+  interestedIds: new Set(),
+  messagesByGroup: {},
+};
+
 const KajoraContext = createContext<KajoraContextValue | null>(null);
 
 function messageFor(error: unknown) {
@@ -118,8 +125,12 @@ export function KajoraProvider({ children }: PropsWithChildren) {
   }, [backendMode, supabaseSession]);
 
   useEffect(() => {
-    if (!session) return;
+    if (!session) {
+      if (backendMode === 'supabase') setData(emptyRemoteState);
+      return;
+    }
     if (backendMode === 'supabase') {
+      setData(emptyRemoteState);
       void refresh();
       return;
     }
@@ -164,7 +175,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
           completedGroups: 0,
           initials: initialsFor(name) || 'TA',
           name,
-          phoneVerified: true,
+          phoneVerified: false,
         },
         id,
         interestedCount: 0,

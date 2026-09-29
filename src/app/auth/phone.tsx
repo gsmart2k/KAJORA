@@ -4,77 +4,117 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AuthShell } from '@/components/auth-shell';
 import { Button } from '@/components/ui';
-import { useAuth } from '@/state/auth-context';
+import { type EmailAuthAction, useAuth } from '@/state/auth-context';
 import { colors, radius, spacing, type } from '@/theme';
 
-function normaliseNigerianNumber(value: string) {
-  const digits = value.replace(/\D/g, '');
-  return digits.startsWith('0') ? digits.slice(1, 11) : digits.slice(0, 10);
-}
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function PhoneScreen() {
+export default function AccountScreen() {
   const router = useRouter();
-  const { beginPhoneSignIn } = useAuth();
-  const [phone, setPhone] = useState('');
-  const [attempted, setAttempted] = useState(false);
+  const { authenticateWithEmail, backendMode } = useAuth();
+  const [action, setAction] = useState<EmailAuthAction>('sign-in');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const valid = phone.length === 10;
+  const validEmail = EMAIL_PATTERN.test(email.trim());
+  const validPassword = password.length >= 8;
+  const ready = validEmail && validPassword;
 
-  const continueToCode = async () => {
-    setAttempted(true);
-    if (!valid) return;
+  const submit = async () => {
+    if (!ready) return;
     setError('');
     setLoading(true);
-    const authError = await beginPhoneSignIn(`+234${phone}`);
+    const authError = await authenticateWithEmail(email.trim().toLowerCase(), password, action);
     setLoading(false);
-    if (authError) {
-      setError(authError);
-      return;
-    }
-    router.push('/auth/verify');
+    if (authError) setError(authError);
   };
 
   return (
     <AuthShell
-      description="We use your number to secure your account and reduce anonymous activity in buying groups."
-      eyebrow="Step 1 of 3"
-      title="What’s your phone number?"
+      description={action === 'sign-up'
+        ? 'Create a simple account for the KAJORA alpha. Phone verification will be added before public launch.'
+        : 'Welcome back. Enter the email and password you used for KAJORA.'}
+      eyebrow="Secure alpha access"
+      title={action === 'sign-up' ? 'Create your account' : 'Sign in to KAJORA'}
       footer={<Pressable onPress={() => router.back()}><Text style={styles.back}>← Back</Text></Pressable>}>
-      <Text style={styles.label}>Nigerian phone number</Text>
-      <View style={[styles.phoneField, attempted && !valid && styles.fieldError]}>
-        <View style={styles.prefix}><Text style={styles.flag}>🇳🇬</Text><Text style={styles.prefixText}>+234</Text></View>
+      <View style={styles.switcher}>
+        {(['sign-up', 'sign-in'] as EmailAuthAction[]).map((item) => {
+          const selected = action === item;
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              key={item}
+              onPress={() => { setAction(item); setError(''); }}
+              style={[styles.switchOption, selected && styles.switchOptionSelected]}>
+              <Text style={[styles.switchText, selected && styles.switchTextSelected]}>
+                {item === 'sign-up' ? 'Create account' : 'Sign in'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Email address</Text>
         <TextInput
-          accessibilityLabel="Phone number"
-          autoComplete="tel"
-          keyboardType="phone-pad"
-          maxLength={11}
-          onChangeText={(value) => setPhone(normaliseNigerianNumber(value))}
-          onSubmitEditing={continueToCode}
-          placeholder="801 234 5678"
+          accessibilityLabel="Email address"
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          onChangeText={(value) => { setEmail(value); setError(''); }}
+          placeholder="you@example.com"
           placeholderTextColor={colors.muted}
-          returnKeyType="done"
+          returnKeyType="next"
           style={styles.input}
-          value={phone}
+          value={email}
         />
       </View>
-      {attempted && !valid ? <Text style={styles.error}>Enter the 10 digits after +234.</Text> : null}
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          accessibilityLabel="Password"
+          autoCapitalize="none"
+          autoComplete={action === 'sign-up' ? 'new-password' : 'current-password'}
+          onChangeText={(value) => { setPassword(value); setError(''); }}
+          onSubmitEditing={() => void submit()}
+          placeholder="At least 8 characters"
+          placeholderTextColor={colors.muted}
+          returnKeyType="done"
+          secureTextEntry
+          style={styles.input}
+          value={password}
+        />
+      </View>
+
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button disabled={!valid} label="Send verification code" loading={loading} onPress={continueToCode} />
-      <Text style={styles.help}>For example, 0801 234 5678 becomes +234 801 234 5678.</Text>
+      <Button
+        disabled={!ready}
+        label={action === 'sign-up' ? 'Create account' : 'Sign in'}
+        loading={loading}
+        onPress={submit}
+      />
+      <Text style={styles.help}>
+        {backendMode === 'demo'
+          ? 'Demo mode is active until the Supabase public project values are added.'
+          : 'Your password is handled by Supabase and is never stored by KAJORA.'}
+      </Text>
     </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
+  switcher: { backgroundColor: colors.quiet, borderRadius: radius.md, flexDirection: 'row', padding: 4 },
+  switchOption: { alignItems: 'center', borderRadius: radius.sm, flex: 1, paddingVertical: 9 },
+  switchOptionSelected: { backgroundColor: colors.paper },
+  switchText: { color: colors.muted, fontSize: type.small, fontWeight: '700' },
+  switchTextSelected: { color: colors.greenDark },
+  fieldGroup: { gap: spacing.sm },
   label: { color: colors.ink, fontSize: type.small, fontWeight: '700' },
-  phoneField: { alignItems: 'center', borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, flexDirection: 'row', minHeight: 50, overflow: 'hidden' },
-  fieldError: { borderColor: colors.danger },
-  prefix: { alignItems: 'center', alignSelf: 'stretch', backgroundColor: colors.sageSoft, borderRightColor: colors.line, borderRightWidth: 1, flexDirection: 'row', gap: spacing.xs, paddingHorizontal: spacing.md },
-  flag: { fontSize: 15 },
-  prefixText: { color: colors.greenDark, fontSize: type.body, fontWeight: '700' },
-  input: { color: colors.ink, flex: 1, fontSize: 16, minHeight: 48, paddingHorizontal: spacing.md },
-  error: { color: colors.danger, fontSize: type.small },
-  help: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  input: { borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, color: colors.ink, fontSize: type.body, minHeight: 50, paddingHorizontal: spacing.md },
+  error: { color: colors.danger, fontSize: type.small, lineHeight: 19 },
+  help: { color: colors.muted, fontSize: 12, lineHeight: 18, textAlign: 'center' },
   back: { color: colors.greenDark, fontSize: type.small, fontWeight: '700', textAlign: 'center' },
 });
