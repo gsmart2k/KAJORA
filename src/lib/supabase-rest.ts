@@ -139,14 +139,6 @@ export async function signInWithEmailPassword(email: string, password: string) {
   return persistAuthResponse(response);
 }
 
-export async function signUpWithEmailPassword(email: string, password: string) {
-  const response = await request<Partial<SupabaseSession>>('/auth/v1/signup', {
-    body: JSON.stringify({ email, password }),
-    method: 'POST',
-  });
-  return persistAuthResponse(response);
-}
-
 async function refreshSession(session: SupabaseSession) {
   const refreshed = withExpiry(
     await request<SupabaseSession>('/auth/v1/token?grant_type=refresh_token', {

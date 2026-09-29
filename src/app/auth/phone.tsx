@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AuthShell } from '@/components/auth-shell';
 import { Button } from '@/components/ui';
-import { type EmailAuthAction, useAuth } from '@/state/auth-context';
+import { useAuth } from '@/state/auth-context';
 import { colors, radius, spacing, type } from '@/theme';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -12,7 +12,6 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function AccountScreen() {
   const router = useRouter();
   const { authenticateWithEmail, backendMode } = useAuth();
-  const [action, setAction] = useState<EmailAuthAction>('sign-in');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -25,37 +24,17 @@ export default function AccountScreen() {
     if (!ready) return;
     setError('');
     setLoading(true);
-    const authError = await authenticateWithEmail(email.trim().toLowerCase(), password, action);
+    const authError = await authenticateWithEmail(email.trim().toLowerCase(), password);
     setLoading(false);
     if (authError) setError(authError);
   };
 
   return (
     <AuthShell
-      description={action === 'sign-up'
-        ? 'Create a simple account for the KAJORA alpha. Phone verification will be added before public launch.'
-        : 'Welcome back. Enter the email and password you used for KAJORA.'}
+      description="Enter the email and password you received for the closed KAJORA alpha. Phone verification will return before public launch."
       eyebrow="Secure alpha access"
-      title={action === 'sign-up' ? 'Create your account' : 'Sign in to KAJORA'}
+      title="Sign in to KAJORA"
       footer={<Pressable onPress={() => router.back()}><Text style={styles.back}>← Back</Text></Pressable>}>
-      <View style={styles.switcher}>
-        {(['sign-up', 'sign-in'] as EmailAuthAction[]).map((item) => {
-          const selected = action === item;
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              key={item}
-              onPress={() => { setAction(item); setError(''); }}
-              style={[styles.switchOption, selected && styles.switchOptionSelected]}>
-              <Text style={[styles.switchText, selected && styles.switchTextSelected]}>
-                {item === 'sign-up' ? 'Create account' : 'Sign in'}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
       <View style={styles.fieldGroup}>
         <Text style={styles.label}>Email address</Text>
         <TextInput
@@ -77,7 +56,7 @@ export default function AccountScreen() {
         <TextInput
           accessibilityLabel="Password"
           autoCapitalize="none"
-          autoComplete={action === 'sign-up' ? 'new-password' : 'current-password'}
+          autoComplete="current-password"
           onChangeText={(value) => { setPassword(value); setError(''); }}
           onSubmitEditing={() => void submit()}
           placeholder="At least 8 characters"
@@ -92,7 +71,7 @@ export default function AccountScreen() {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Button
         disabled={!ready}
-        label={action === 'sign-up' ? 'Create account' : 'Sign in'}
+        label="Sign in"
         loading={loading}
         onPress={submit}
       />
@@ -106,11 +85,6 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  switcher: { backgroundColor: colors.quiet, borderRadius: radius.md, flexDirection: 'row', padding: 4 },
-  switchOption: { alignItems: 'center', borderRadius: radius.sm, flex: 1, paddingVertical: 9 },
-  switchOptionSelected: { backgroundColor: colors.paper },
-  switchText: { color: colors.muted, fontSize: type.small, fontWeight: '700' },
-  switchTextSelected: { color: colors.greenDark },
   fieldGroup: { gap: spacing.sm },
   label: { color: colors.ink, fontSize: type.small, fontWeight: '700' },
   input: { borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, color: colors.ink, fontSize: type.body, minHeight: 50, paddingHorizontal: spacing.md },

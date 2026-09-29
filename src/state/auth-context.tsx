@@ -15,14 +15,11 @@ import {
   restoreSupabaseSession,
   signInWithEmailPassword,
   signOutSupabase,
-  signUpWithEmailPassword,
   type SupabaseSession,
   updateProfile,
 } from '@/lib/supabase-rest';
 
 const DEMO_SESSION_KEY = 'kajora.demo.session.v3';
-
-export type EmailAuthAction = 'sign-in' | 'sign-up';
 
 export type KajoraSession = {
   userId: string;
@@ -38,7 +35,7 @@ type AuthContextValue = {
   isLoading: boolean;
   session: KajoraSession | null;
   supabaseSession: SupabaseSession | null;
-  authenticateWithEmail: (email: string, password: string, action: EmailAuthAction) => Promise<string | null>;
+  authenticateWithEmail: (email: string, password: string) => Promise<string | null>;
   completeProfile: (details: Pick<KajoraSession, 'name' | 'location'>) => Promise<string | null>;
   signOut: () => Promise<void>;
 };
@@ -98,7 +95,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const authenticateWithEmail = useCallback(
-    async (email: string, password: string, action: EmailAuthAction) => {
+    async (email: string, password: string) => {
       if (!isSupabaseConfigured) {
         const nextSession: KajoraSession = {
           email,
@@ -114,9 +111,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
 
       try {
-        const remote = action === 'sign-up'
-          ? await signUpWithEmailPassword(email, password)
-          : await signInWithEmailPassword(email, password);
+        const remote = await signInWithEmailPassword(email, password);
         const profile = await fetchProfile(remote);
         setSupabaseSession(remote);
         setSession(sessionFromProfile(remote, profile));

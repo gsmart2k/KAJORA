@@ -36,7 +36,7 @@ export default function WelcomeScreen() {
           </View>
         ))}
       </View>
-      <Button label="Create an account" onPress={() => router.push('/auth/phone')} />
+      <Button label="Sign in to the alpha" onPress={() => router.push('/auth/phone')} />
       <Text style={styles.note}>Your email address is never displayed on the public wall.</Text>
     </AuthShell>
   );
