@@ -8,7 +8,6 @@ import {
   useState,
 } from 'react';
 
-import { groupMessages as initialGroupMessages, initialIntents } from '@/data/mock';
 import { readStoredJson, writeStoredJson } from '@/lib/storage';
 import {
   createRemoteIntent,
@@ -23,7 +22,7 @@ import {
 import { useAuth } from '@/state/auth-context';
 import type { BuyingGroup, CreateIntentInput, GroupMessage, Intent, IntentStatus } from '@/types';
 
-const DEMO_DATA_KEY = 'kajora.demo.data.v2';
+const DEMO_DATA_KEY = 'kajora.demo.data.v3';
 
 type DataState = {
   groups: BuyingGroup[];
@@ -49,10 +48,10 @@ type KajoraContextValue = DataState & {
 };
 
 const demoInitialState: DataState = {
-  groups: [{ id: 'rice-otaefun', memberCount: 5, sourcePostId: 'rice-otaefun', state: 'planning' }],
-  intents: initialIntents,
-  interestedIds: new Set(['rice-otaefun']),
-  messagesByGroup: { 'rice-otaefun': initialGroupMessages },
+  groups: [],
+  intents: [],
+  interestedIds: new Set(),
+  messagesByGroup: {},
 };
 
 const emptyRemoteState: DataState = {

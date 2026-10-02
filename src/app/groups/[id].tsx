@@ -4,7 +4,6 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 
 import { AppShell } from '@/components/app-shell';
 import { Avatar, Button, SectionLabel, StatusPill } from '@/components/ui';
-import { groupDecisions } from '@/data/mock';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 import type { DecisionState } from '@/types';
@@ -25,6 +24,11 @@ export default function GroupRoomScreen() {
   const group = findGroup(id);
   const intent = group ? findIntent(group.sourcePostId) : undefined;
   const messages = group ? messagesByGroup[group.id] ?? [] : [];
+  const groupDecisions = ['Product', 'Portions', 'Supplier', 'Final amount', 'Pickup'].map((label) => ({
+    label,
+    value: 'Discuss this together in the conversation',
+    state: 'Not discussed' as const,
+  }));
   const memberInitials = intent
     ? [...new Set([intent.creator.initials, ...messages.map((message) => message.initials)])].slice(0, 4)
     : [];

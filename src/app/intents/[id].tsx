@@ -101,13 +101,6 @@ export default function IntentDetailScreen() {
             <Text style={styles.interestCount}>{intent.interestedCount} people interested</Text>
             <Text style={styles.interestHelp}>Interest is free and does not commit you to pay.</Text>
           </View>
-          <View style={styles.avatarStack}>
-            {['MA', 'KO', 'SA'].slice(0, Math.min(intent.interestedCount, 3)).map((initials, index) => (
-              <View key={initials} style={{ marginLeft: index ? -8 : 0 }}>
-                <Avatar initials={initials} size={32} />
-              </View>
-            ))}
-          </View>
         </View>
 
         <View style={styles.actions}>
