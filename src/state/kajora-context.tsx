@@ -103,10 +103,9 @@ export function KajoraProvider({ children }: PropsWithChildren) {
         fetchInterestedPostIds(supabaseSession),
         fetchRemoteGroups(supabaseSession),
       ]);
-      const intentMap = new Map(intents.map((intent) => [intent.id, intent]));
       const groups = remoteGroups.map((group) => ({
         id: group.id,
-        memberCount: (intentMap.get(group.source_post_id)?.interestedCount ?? 0) + 1,
+        memberCount: group.group_members.filter((member) => !['withdrawn', 'removed'].includes(member.state)).length,
         sourcePostId: group.source_post_id,
         state: group.state.replace('_', '-') as IntentStatus,
       }));

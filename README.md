@@ -258,7 +258,7 @@ The repository now contains a functional alpha vertical slice:
 - new-intention publishing; and
 - a basic profile and trust-language screen.
 
-Without Supabase environment variables, KAJORA automatically runs in demo mode. Demo sessions, intentions, interests, groups, and messages persist on the device.
+Supabase environment variables are required for sign-in. Missing configuration blocks authentication; demo sessions are no longer restored.
 
 With Supabase configured, the app uses email-and-password accounts and shared cloud data, so two people can complete the end-to-end alpha journey. Phone OTP remains the intended public-launch authentication method once an appropriate Nigerian SMS provider is available.
 
@@ -284,6 +284,7 @@ KAJORA never needs a Supabase service-role key in the app. Only use the public p
 2. Open the Supabase SQL editor and run these files in order:
    - `supabase/migrations/202609260001_initial_schema.sql`
    - `supabase/migrations/202609280001_alpha_helpers.sql`
+   - `supabase/migrations/202610050001_join_approval.sql`
 3. In Supabase Authentication, enable the Email provider and set a minimum password length of at least eight characters.
 4. For a closed alpha without an email delivery provider, create the test users in Authentication > Users and keep public sign-ups disabled. Do not disable email confirmation for a public launch.
 5. Copy the environment template:
@@ -354,3 +355,5 @@ Future project documentation may include:
 **Persistent multi-user alpha with Supabase email accounts.**
 
 The account onboarding flow, intent-first model, visual system, main screens, persisted demo mode, Supabase authentication, database persistence, automatic group creation, and group conversation are implemented. Phone verification remains on the roadmap for the public pilot once a suitable SMS provider is available.
+
+See [Approved membership rollout](docs/JOIN_APPROVAL.md) for organiser approval, optional total group sizes, migration order, and the three-account privacy test.

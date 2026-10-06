@@ -23,12 +23,14 @@ export type Intent = {
   description: string;
   interestedCount: number;
   desiredPeople?: number;
+  joiningClosed?: boolean;
   createdAgo: string;
   status: IntentStatus;
   accent: 'green' | 'clay' | 'ochre';
 };
 
 export type CreateIntentInput = {
+  desiredPeople?: number;
   category: IntentCategory;
   title: string;
   product: string;

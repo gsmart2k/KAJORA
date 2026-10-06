@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 
-import { readStoredJson, removeStoredValue, writeStoredJson } from '@/lib/storage';
+import { removeStoredValue, writeStoredJson } from '@/lib/storage';
 import {
   fetchProfile,
   isSupabaseConfigured,
@@ -81,8 +81,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
           return;
         }
 
-        const stored = await readStoredJson<KajoraSession>(DEMO_SESSION_KEY);
-        if (stored && mounted) setSession(stored);
+        // Missing configuration must never restore a demo identity as a real account.
+        await removeStoredValue(DEMO_SESSION_KEY);
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -97,17 +97,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const authenticateWithEmail = useCallback(
     async (email: string, password: string) => {
       if (!isSupabaseConfigured) {
-        const nextSession: KajoraSession = {
-          email,
-          location: 'Osogbo, Osun State',
-          mode: 'demo',
-          name: '',
-          profileComplete: false,
-          userId: `demo-${email.toLowerCase()}`,
-        };
-        setSession(nextSession);
-        await writeStoredJson(DEMO_SESSION_KEY, nextSession);
-        return null;
+        return 'Sign-in is unavailable: configure the Supabase project in .env.local and restart Expo.';
       }
 
       try {

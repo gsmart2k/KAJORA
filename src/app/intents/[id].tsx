@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { JoinRequests } from '@/components/join-requests';
 import { AppShell } from '@/components/app-shell';
 import { Avatar, Button, SectionLabel, StatusPill, Wordmark } from '@/components/ui';
 import { useAuth } from '@/state/auth-context';
@@ -12,7 +13,7 @@ export default function IntentDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { session } = useAuth();
-  const { error, expressInterest, findIntent, getGroupForIntent, interestedIds, withdrawInterest } = useKajora();
+  const { error, expressInterest, findIntent, getGroupForIntent, interestedIds, refresh, withdrawInterest } = useKajora();
   const [loading, setLoading] = useState(false);
   const intent = findIntent(id);
 
@@ -29,12 +30,13 @@ export default function IntentDetailScreen() {
 
   const interested = interestedIds.has(intent.id);
   const isOwner = Boolean(intent.creatorId && intent.creatorId === session?.userId);
+  const group = getGroupForIntent(intent.id);
+  const pending = interested && !group;
   const available = intent.type === 'available-share';
 
   const handleInterest = async () => {
-    if (interested) {
-      const group = getGroupForIntent(intent.id);
-      if (group) router.push({ pathname: '/groups/[id]', params: { id: group.id } });
+    if (group) {
+      router.push({ pathname: '/groups/[id]', params: { id: group.id } });
       return;
     }
     setLoading(true);
@@ -85,6 +87,7 @@ export default function IntentDetailScreen() {
           <SectionLabel>WHAT THEY HAVE IN MIND</SectionLabel>
           <View style={styles.factGrid}>
             <Fact label="Product" value={intent.product} />
+            <Fact label="Total people including organiser" value={intent.desiredPeople ? String(intent.desiredPeople) : "Not decided yet"} />
             <Fact label={available ? 'Available' : 'Preferred share'} value={intent.desiredShare} />
             <Fact label="Timing" value={intent.timing} />
             <Fact label="Budget" value={intent.budget ?? 'Not discussed'} />
@@ -105,14 +108,17 @@ export default function IntentDetailScreen() {
 
         <View style={styles.actions}>
           <Button
-            disabled={isOwner}
-            label={isOwner ? 'You started this plan' : interested ? 'Open group room' : available ? 'Request this share' : "I'm interested"}
+            disabled={!group && (isOwner || pending || intent.joiningClosed)}
+            label={group ? 'Open private group' : isOwner ? 'You started this plan' : pending ? 'Awaiting approval' : intent.joiningClosed ? 'Joining closed' : 'Request to join'}
             loading={loading}
             onPress={handleInterest}
           />
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          {interested ? (
-            <Button label="Withdraw interest" onPress={() => void withdrawInterest(intent.id)} variant="secondary" />
+          <Text style={styles.interestHelp}>Chat access requires organiser approval.</Text>
+          <Button label="Refresh status" variant="secondary" onPress={refresh} />
+          {isOwner ? <JoinRequests intent={intent} /> : null}
+          {interested && !isOwner ? (
+            <Button label={pending ? "Cancel request" : "Leave group"} onPress={() => void withdrawInterest(intent.id)} variant="secondary" />
           ) : null}
         </View>
       </ScrollView>

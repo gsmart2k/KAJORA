@@ -77,7 +77,7 @@ export default function AccountScreen() {
       />
       <Text style={styles.help}>
         {backendMode === 'demo'
-          ? 'Demo mode is active until the Supabase public project values are added.'
+          ? 'Sign-in is unavailable until the Supabase project is configured.'
           : 'Your password is handled by Supabase and is never stored by KAJORA.'}
       </Text>
     </AuthShell>

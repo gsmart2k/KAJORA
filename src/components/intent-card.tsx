@@ -12,8 +12,6 @@ const productIcons = {
 
 export function IntentCard({ intent, onPress }: { intent: Intent; onPress: () => void }) {
   const available = intent.type === 'available-share';
-  const target = intent.desiredPeople ?? Math.max(intent.interestedCount + 2, 4);
-  const progress = `${Math.min((intent.interestedCount / target) * 100, 100)}%` as `${number}%`;
 
   return (
     <Pressable
@@ -48,10 +46,7 @@ export function IntentCard({ intent, onPress }: { intent: Intent; onPress: () =>
       </View>
 
       <View style={styles.progressRow}>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progress, { width: progress }]} />
-        </View>
-        <Text style={styles.progressText}>{intent.interestedCount}/{target} people</Text>
+        <Text style={styles.progressText}>{intent.interestedCount} interested{intent.desiredPeople ? ` · Target: ${intent.desiredPeople} total people` : ''}</Text>
       </View>
 
       <View style={styles.footer}>

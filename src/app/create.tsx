@@ -18,6 +18,7 @@ export default function CreateScreen() {
   const [timing, setTiming] = useState('');
   const [location, setLocation] = useState('Osogbo, Osun State');
   const [description, setDescription] = useState('');
+  const [people, setPeople] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,11 +26,16 @@ export default function CreateScreen() {
 
   const publish = async () => {
     if (!ready) return;
+    if (people.trim() && (!/^\d+$/.test(people.trim()) || Number(people) < 2 || Number(people) > 100)) {
+      setError('Choose 2–100 people including yourself, or leave it blank.');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
       const id = await createIntent({
         category,
+        desiredPeople: people.trim() ? Number(people) : undefined,
         product: product.trim(),
         title: title.trim(),
         desiredShare: share.trim(),
@@ -90,6 +96,7 @@ export default function CreateScreen() {
                 <Field label="WHEN" placeholder="e.g. Before 19 Oct" value={timing} onChangeText={setTiming} />
               </View>
             </View>
+            <Field label="TOTAL PEOPLE, INCLUDING YOU (OPTIONAL)" accessibilityLabel="Total people including you" keyboardType="number-pad" placeholder="Not sure yet" value={people} onChangeText={setPeople} />
             <Field label="GENERAL LOCATION" placeholder="Town or neighbourhood" value={location} onChangeText={setLocation} />
             <Field
               label="A SHORT NOTE"

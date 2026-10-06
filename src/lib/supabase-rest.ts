@@ -50,6 +50,7 @@ type PostRow = {
   location_label: string;
   area_label: string;
   desired_people: number | null;
+  joining_closed: boolean;
   created_at: string;
   creator: {
     display_name: string;
@@ -59,6 +60,7 @@ type PostRow = {
 };
 
 export type RemoteGroup = {
+  group_members: { user_id: string; state: string }[];
   id: string;
   source_post_id: string;
   state: string;
@@ -234,6 +236,7 @@ function mapPost(row: PostRow, counts: Map<string, number>): Intent {
     },
     description: row.description,
     desiredPeople: row.desired_people ?? undefined,
+    joiningClosed: row.joining_closed,
     desiredShare: row.desired_share,
     id: row.id,
     interestedCount: counts.get(row.id) ?? 0,
@@ -249,7 +252,7 @@ function mapPost(row: PostRow, counts: Map<string, number>): Intent {
 export async function fetchIntents(session: SupabaseSession) {
   const select = [
     'id,creator_id,type,state,category,product,title,description,desired_share,timing_text,budget_text',
-    'location_label,area_label,desired_people,created_at',
+    'location_label,area_label,desired_people,joining_closed,created_at',
     'creator:profiles!posts_creator_id_fkey(display_name,completed_groups,phone_verified)',
   ].join(',');
   const [posts, countRows] = await Promise.all([
@@ -281,6 +284,7 @@ export async function createRemoteIntent(
         creator_id: session.user.id,
         description: input.description,
         desired_share: input.desiredShare,
+        desired_people: input.desiredPeople ?? null,
         location_label: input.location,
         product: input.product,
         timing_text: input.timing,
@@ -306,14 +310,14 @@ export async function fetchInterestedPostIds(session: SupabaseSession) {
 
 export async function fetchRemoteGroups(session: SupabaseSession) {
   return request<RemoteGroup[]>(
-    '/rest/v1/buying_groups?select=id,source_post_id,state&order=updated_at.desc',
+    '/rest/v1/buying_groups?select=id,source_post_id,state,group_members(user_id,state)&order=updated_at.desc',
     undefined,
     session.access_token,
   );
 }
 
 export async function expressRemoteInterest(session: SupabaseSession, postId: string) {
-  return request<string>(
+  return request<string | null>(
     '/rest/v1/rpc/express_interest',
     { body: JSON.stringify({ target_post: postId }), method: 'POST' },
     session.access_token,
@@ -349,4 +353,17 @@ export async function sendRemoteMessage(session: SupabaseSession, groupId: strin
     session.access_token,
   );
   return rows[0];
+}
+
+export async function fetchJoinRequests(session: SupabaseSession, postId: string) {
+  return request<{ user_id: string; display_name: string }[]>('/rest/v1/rpc/get_join_requests',
+    { method: 'POST', body: JSON.stringify({ target_post: postId }) }, session.access_token);
+}
+export async function reviewJoinRequest(session: SupabaseSession, postId: string, applicant: string, approve: boolean) {
+  await request('/rest/v1/rpc/review_join_request',
+    { method: 'POST', body: JSON.stringify({ target_post: postId, applicant, approve }) }, session.access_token);
+}
+export async function setJoiningClosed(session: SupabaseSession, postId: string, closed: boolean) {
+  await request('/rest/v1/rpc/set_joining_closed',
+    { method: 'POST', body: JSON.stringify({ target_post: postId, closed }) }, session.access_token);
 }
