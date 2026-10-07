@@ -57,6 +57,7 @@ export type GroupDecision = {
 
 export type GroupMessage = {
   id: string;
+  authorId?: string;
   author: string;
   initials: string;
   body: string;

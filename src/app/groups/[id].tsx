@@ -98,16 +98,24 @@ export default function GroupRoomScreen() {
 
           <SectionLabel>CONVERSATION</SectionLabel>
           <View style={styles.messages}>
-            {messages.map((message) => (
+            {messages.map((message) => {
+              const isOrganiser = Boolean(intent.creatorId && message.authorId === intent.creatorId);
+              return (
               <View key={message.id} style={[styles.messageRow, message.mine && styles.messageMine]}>
                 {!message.mine && <Avatar initials={message.initials} size={30} />}
                 <View style={[styles.message, message.mine && styles.messageBubbleMine]}>
-                  {!message.mine && <Text style={styles.messageAuthor}>{message.author}</Text>}
+                  {(!message.mine || isOrganiser) && (
+                    <View style={styles.messageHeading}>
+                      <Text style={styles.messageAuthor}>{message.author}</Text>
+                      {isOrganiser && <Text style={styles.organiserBadge}>Organiser</Text>}
+                    </View>
+                  )}
                   <Text style={styles.messageBody}>{message.body}</Text>
                   <Text style={styles.messageTime}>{message.time}</Text>
                 </View>
               </View>
-            ))}
+              );
+            })}
           </View>
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
@@ -163,7 +171,9 @@ const styles = StyleSheet.create({
   messageMine: { justifyContent: 'flex-end' },
   message: { backgroundColor: colors.paper, borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, maxWidth: '86%', padding: spacing.md },
   messageBubbleMine: { backgroundColor: colors.sageSoft, borderColor: colors.sage },
-  messageAuthor: { color: colors.greenDark, fontSize: 11, fontWeight: '700', marginBottom: 4 },
+  messageHeading: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 6 },
+  messageAuthor: { color: colors.greenDark, flexShrink: 1, fontSize: 11, fontWeight: '700' },
+  organiserBadge: { backgroundColor: colors.greenDark, borderRadius: radius.sm, color: colors.paper, fontSize: 10, fontWeight: '600', overflow: 'hidden', paddingHorizontal: 7, paddingVertical: 3 },
   messageBody: { color: colors.ink, fontSize: type.small, lineHeight: 20 },
   messageTime: { alignSelf: 'flex-end', color: colors.muted, fontSize: 10, marginTop: 5 },
   composer: { alignItems: 'center', backgroundColor: colors.canvas, borderTopColor: colors.line, borderTopWidth: 1, flexDirection: 'row', gap: spacing.sm, padding: spacing.md },

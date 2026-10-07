@@ -259,6 +259,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
           const author = row.author?.display_name ?? 'KAJORA member';
           return {
             author,
+            authorId: row.author_id,
             body: row.body,
             id: row.id,
             initials: initialsFor(author) || 'KJ',
@@ -291,6 +292,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
           const author = row.author?.display_name ?? session.name;
           message = {
             author,
+            authorId: row.author_id,
             body: row.body,
             id: row.id,
             initials: initialsFor(author) || 'KJ',
@@ -301,6 +303,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
           const author = session?.name || 'You';
           message = {
             author,
+            authorId: session?.userId,
             body: trimmed,
             id: `message-${Date.now()}`,
             initials: initialsFor(author) || 'YO',
