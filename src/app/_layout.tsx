@@ -1,3 +1,4 @@
+import { ActivityProvider } from '@/state/activity-context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
@@ -10,11 +11,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <KajoraProvider>
+      <AccountContent />
+    </AuthProvider>
+  );
+}
+
+function AccountContent() {
+  const { session } = useAuth();
+  return (
+    <KajoraProvider key={session?.userId ?? 'signed-out'}>
+      <ActivityProvider>
         <StatusBar style="dark" />
         <RootNavigator />
-      </KajoraProvider>
-    </AuthProvider>
+      </ActivityProvider>
+    </KajoraProvider>
   );
 }
 

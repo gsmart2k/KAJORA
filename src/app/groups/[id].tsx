@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { useActivity } from '@/state/activity-context';
+import { isAppVisible, useAutoRefresh } from '@/lib/use-auto-refresh';
+
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
@@ -18,6 +21,12 @@ const decisionTone: Record<DecisionState, 'green' | 'clay' | 'neutral'> = {
 export default function GroupRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const [focused, setFocused] = useState(false);
+  useFocusEffect(useCallback(() => {
+    setFocused(true);
+    return () => setFocused(false);
+  }, []));
+  const { markRead } = useActivity();
   const { error, findGroup, findIntent, loadGroupMessages, messagesByGroup, sendGroupMessage } = useKajora();
   const [messageBody, setMessageBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -33,9 +42,16 @@ export default function GroupRoomScreen() {
     ? [...new Set([intent.creator.initials, ...messages.map((message) => message.initials)])].slice(0, 4)
     : [];
 
+  const groupId = group?.id;
   useEffect(() => {
-    if (group) void loadGroupMessages(group.id);
-  }, [group, loadGroupMessages]);
+    if (groupId) void loadGroupMessages(groupId);
+  }, [groupId, loadGroupMessages]);
+
+  const markVisibleRead = useCallback(async () => {
+    if (focused && groupId && isAppVisible()) markRead(groupId);
+  }, [focused, groupId, markRead]);
+  useEffect(() => { void markVisibleRead(); }, [markVisibleRead]);
+  useAutoRefresh(markVisibleRead, focused && Boolean(groupId));
 
   if (!intent || !group) return null;
 

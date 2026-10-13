@@ -1,3 +1,4 @@
+import { useActivity } from '@/state/activity-context';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -8,7 +9,8 @@ import { colors, radius, spacing, type } from '@/theme';
 
 export default function GroupsScreen() {
   const router = useRouter();
-  const { error, findIntent, groups, isLoading } = useKajora();
+  const { error, findIntent, groups, isLoading, requestsByIntent } = useKajora();
+  const { unread, newGroups } = useActivity();
   const groupItems = groups.flatMap((group) => {
     const intent = findIntent(group.sourcePostId);
     return intent ? [{ group, intent }] : [];
@@ -22,6 +24,14 @@ export default function GroupsScreen() {
         <Text style={styles.lede}>People you’re planning a purchase with. Nothing here is a payment commitment.</Text>
 
         <View style={styles.list}>
+          {Object.entries(requestsByIntent).filter(([, requests]) => requests.length > 0).map(([id, requests]) => (
+            <Pressable key={id} accessibilityRole="button" style={styles.card}
+              onPress={() => router.push({ pathname: '/intents/[id]', params: { id } })}>
+              <Text style={styles.cardTitle}>{requests.length} pending join {requests.length === 1 ? 'request' : 'requests'}</Text>
+              <Text style={styles.cardBody}>{findIntent(id)?.title ?? 'Your intention'}</Text>
+              <Text style={styles.discover}>Review requests →</Text>
+            </Pressable>
+          ))}
           {groupItems.map(({ group, intent }) => (
             <Pressable
               key={group.id}
@@ -35,6 +45,8 @@ export default function GroupsScreen() {
                 </View>
                 <StatusPill label={group.state.replace('-', ' ').toUpperCase()} tone="green" />
               </View>
+              {newGroups.includes(group.id) ? <Text style={styles.discover}>You’re in · Open your group</Text> : null}
+              {(unread[group.id] ?? 0) > 0 ? <Text style={styles.discover}>{unread[group.id]} unread {unread[group.id] === 1 ? 'message' : 'messages'}</Text> : null}
               <Text numberOfLines={2} style={styles.cardBody}>{intent.title}</Text>
               <View style={styles.progressTrack}><View style={[styles.progress, { width: group.state === 'planning' ? '55%' : '30%' }]} /></View>
               <View style={styles.cardFooter}>

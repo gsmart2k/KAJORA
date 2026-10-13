@@ -5,14 +5,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
+import { useAutoRefresh } from '@/lib/use-auto-refresh';
 import { readStoredJson, writeStoredJson } from '@/lib/storage';
 import {
   createRemoteIntent,
   expressRemoteInterest,
   fetchInterestedPostIds,
+  fetchJoinRequests,
   fetchIntents,
   fetchRemoteGroups,
   fetchRemoteMessages,
@@ -34,6 +37,7 @@ type DataState = {
 type StoredDemoData = Omit<DataState, 'interestedIds'> & { interestedIds: string[] };
 
 type KajoraContextValue = DataState & {
+  requestsByIntent: Record<string, { user_id: string; display_name: string }[]>;
   error: string;
   isLoading: boolean;
   createIntent: (input: CreateIntentInput) => Promise<string>;
@@ -48,13 +52,6 @@ type KajoraContextValue = DataState & {
 };
 
 const demoInitialState: DataState = {
-  groups: [],
-  intents: [],
-  interestedIds: new Set(),
-  messagesByGroup: {},
-};
-
-const emptyRemoteState: DataState = {
   groups: [],
   intents: [],
   interestedIds: new Set(),
@@ -91,11 +88,16 @@ export function KajoraProvider({ children }: PropsWithChildren) {
   const [data, setData] = useState<DataState>(demoInitialState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [requestsByIntent, setRequestsByIntent] = useState<Record<string, { user_id: string; display_name: string }[]>>({});
+  const refreshRunning = useRef(false);
+  const messageLoads = useRef(new Set<string>());
+  const messageVersions = useRef<Record<string, number>>({});
   const [demoHydrated, setDemoHydrated] = useState(false);
 
-  const refresh = useCallback(async () => {
-    if (backendMode !== 'supabase' || !supabaseSession) return;
-    setIsLoading(true);
+  const refresh = useCallback(async (quiet = false) => {
+    if (backendMode !== 'supabase' || !supabaseSession || refreshRunning.current) return;
+    refreshRunning.current = true;
+    if (!quiet) setIsLoading(true);
     setError('');
     try {
       const [intents, interestedIds, remoteGroups] = await Promise.all([
@@ -109,26 +111,27 @@ export function KajoraProvider({ children }: PropsWithChildren) {
         sourcePostId: group.source_post_id,
         state: group.state.replace('_', '-') as IntentStatus,
       }));
+      const requests = await Promise.all(intents
+        .filter((intent) => intent.creatorId === supabaseSession.user.id)
+        .map(async (intent) => [intent.id, await fetchJoinRequests(supabaseSession, intent.id)] as const));
+      setRequestsByIntent(Object.fromEntries(requests));
       setData((current) => ({
         groups,
         intents,
         interestedIds: new Set(interestedIds),
-        messagesByGroup: current.messagesByGroup,
+        messagesByGroup: Object.fromEntries(Object.entries(current.messagesByGroup).filter(([id]) => groups.some((group) => group.id === id))),
       }));
     } catch (loadError) {
       setError(messageFor(loadError));
     } finally {
+      refreshRunning.current = false;
       setIsLoading(false);
     }
   }, [backendMode, supabaseSession]);
 
   useEffect(() => {
-    if (!session) {
-      if (backendMode === 'supabase') setData(emptyRemoteState);
-      return;
-    }
+    if (!session) return;
     if (backendMode === 'supabase') {
-      setData(emptyRemoteState);
       void refresh();
       return;
     }
@@ -183,7 +186,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
       setData((current) => ({ ...current, intents: [intent, ...current.intents] }));
       return id;
     },
-    [backendMode, refresh, session?.name, supabaseSession],
+    [backendMode, refresh, session?.name, session?.userId, supabaseSession],
   );
 
   const expressInterest = useCallback(
@@ -252,14 +255,18 @@ export function KajoraProvider({ children }: PropsWithChildren) {
 
   const loadGroupMessages = useCallback(
     async (groupId: string) => {
-      if (backendMode !== 'supabase' || !supabaseSession || !session) return;
+      if (backendMode !== 'supabase' || !supabaseSession || !session || messageLoads.current.has(groupId)) return;
+      messageLoads.current.add(groupId);
+      const version = messageVersions.current[groupId] ?? 0;
       try {
         const rows = await fetchRemoteMessages(supabaseSession, groupId);
+        if (version !== (messageVersions.current[groupId] ?? 0)) return;
         const messages = rows.map<GroupMessage>((row) => {
           const author = row.author?.display_name ?? 'KAJORA member';
           return {
             author,
             authorId: row.author_id,
+            createdAt: row.created_at,
             body: row.body,
             id: row.id,
             initials: initialsFor(author) || 'KJ',
@@ -267,13 +274,13 @@ export function KajoraProvider({ children }: PropsWithChildren) {
             time: new Date(row.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
         });
-        setData((current) => ({
+        setData((current) => current.groups.some((group) => group.id === groupId) ? ({
           ...current,
           messagesByGroup: { ...current.messagesByGroup, [groupId]: messages },
-        }));
+        }) : current);
       } catch (messageError) {
         setError(messageFor(messageError));
-      }
+      } finally { messageLoads.current.delete(groupId); }
     },
     [backendMode, session, supabaseSession],
   );
@@ -293,6 +300,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
           message = {
             author,
             authorId: row.author_id,
+            createdAt: row.created_at,
             body: row.body,
             id: row.id,
             initials: initialsFor(author) || 'KJ',
@@ -311,11 +319,12 @@ export function KajoraProvider({ children }: PropsWithChildren) {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
         }
+        messageVersions.current[groupId] = (messageVersions.current[groupId] ?? 0) + 1;
         setData((current) => ({
           ...current,
           messagesByGroup: {
             ...current.messagesByGroup,
-            [groupId]: [...(current.messagesByGroup[groupId] ?? []), message],
+            [groupId]: [...(current.messagesByGroup[groupId] ?? []).filter((item) => item.id !== message.id), message],
           },
         }));
         return null;
@@ -328,9 +337,18 @@ export function KajoraProvider({ children }: PropsWithChildren) {
     [backendMode, session, supabaseSession],
   );
 
+  useAutoRefresh(async () => {
+    await refresh(true);
+    if (!supabaseSession) return;
+    try {
+      await Promise.all(data.groups.map((group) => loadGroupMessages(group.id)));
+    } catch (loadError) { setError(messageFor(loadError)); }
+  }, backendMode === 'supabase' && Boolean(session));
+
   const value = useMemo<KajoraContextValue>(
     () => ({
       ...data,
+      requestsByIntent,
       createIntent,
       error,
       expressInterest,
@@ -343,7 +361,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
       sendGroupMessage,
       withdrawInterest,
     }),
-    [createIntent, data, error, expressInterest, isLoading, loadGroupMessages, refresh, sendGroupMessage, withdrawInterest],
+    [createIntent, data, requestsByIntent, error, expressInterest, isLoading, loadGroupMessages, refresh, sendGroupMessage, withdrawInterest],
   );
 
   return <KajoraContext.Provider value={value}>{children}</KajoraContext.Provider>;

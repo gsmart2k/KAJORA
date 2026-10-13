@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { Button } from '@/components/ui';
-import { fetchJoinRequests, reviewJoinRequest, setJoiningClosed } from '@/lib/supabase-rest';
+import { reviewJoinRequest, setJoiningClosed } from '@/lib/supabase-rest';
 import { useAuth } from '@/state/auth-context';
 import { useKajora } from '@/state/kajora-context';
 import { colors, spacing } from '@/theme';
@@ -9,20 +9,13 @@ import type { Intent } from '@/types';
 
 export function JoinRequests({ intent }: { intent: Intent }) {
   const { supabaseSession } = useAuth();
-  const { refresh } = useKajora();
-  const [requests, setRequests] = useState<{ user_id: string; display_name: string }[]>([]);
+  const { refresh, requestsByIntent } = useKajora();
+  const requests = requestsByIntent[intent.id] ?? [];
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const reload = useCallback(async () => {
-    if (!supabaseSession) return;
-    setError('');
-    try { setRequests(await fetchJoinRequests(supabaseSession, intent.id)); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Could not load requests'); }
-  }, [supabaseSession, intent.id]);
-  useEffect(() => { void reload(); }, [reload]);
   const act = async (action: () => Promise<void>) => {
     setBusy(true); setError('');
-    try { await action(); await refresh(); await reload(); }
+    try { await action(); await refresh(); }
     catch (e) { setError(e instanceof Error ? e.message : 'Please try again'); }
     finally { setBusy(false); }
   };
@@ -31,7 +24,7 @@ export function JoinRequests({ intent }: { intent: Intent }) {
     <View style={{ gap: spacing.md }}>
       <Text style={{ color: colors.ink, fontWeight: '700' }}>Join requests</Text>
       <Text>Only approved members can read and send group messages. New members can see earlier messages.</Text>
-      <Button disabled={busy} label="Refresh requests" variant="secondary" onPress={reload} />
+      <Button disabled={busy} label="Refresh requests" variant="secondary" onPress={refresh} />
       {requests.length === 0 ? <Text>No pending requests.</Text> : null}
       {requests.map((person) => (
         <View key={person.user_id} style={{ gap: spacing.sm }}>

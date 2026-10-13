@@ -1,3 +1,4 @@
+import { useActivity } from '@/state/activity-context';
 import type { PropsWithChildren } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -26,6 +27,7 @@ const addSymbol: SymbolViewProps['name'] = { ios: 'plus', android: 'add', web: '
 
 export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{ activeRoute?: RouteName }>) {
   const router = useRouter();
+  const { total } = useActivity();
   return (
     <View style={styles.page}>
       <SafeAreaView edges={['top']} style={styles.shell}>
@@ -71,7 +73,7 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
                         styles.navLabel,
                         selected && styles.navLabelSelected,
                       ]}>
-                      {item.label}
+                      {item.label}{item.key === 'groups' && total > 0 ? ` (${total})` : ''}
                     </Text>
                   </Pressable>
                 );

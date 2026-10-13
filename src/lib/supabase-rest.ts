@@ -334,11 +334,17 @@ export async function withdrawRemoteInterest(session: SupabaseSession, postId: s
 
 export async function fetchRemoteMessages(session: SupabaseSession, groupId: string) {
   const select = 'id,group_id,author_id,body,created_at,author:profiles!group_messages_author_id_fkey(display_name)';
-  return request<RemoteMessage[]>(
-    `/rest/v1/group_messages?group_id=eq.${groupId}&select=${encodeURIComponent(select)}&order=created_at.asc`,
-    undefined,
-    session.access_token,
-  );
+  const messages: RemoteMessage[] = [];
+  // Explicit pages prevent the API's row limit from hiding newer messages.
+  for (let offset = 0; ; offset += 500) {
+    const page = await request<RemoteMessage[]>(
+      `/rest/v1/group_messages?group_id=eq.${groupId}&select=${encodeURIComponent(select)}&order=created_at.asc,id.asc&limit=500&offset=${offset}`,
+      undefined,
+      session.access_token,
+    );
+    messages.push(...page);
+    if (page.length < 500) return messages;
+  }
 }
 
 export async function sendRemoteMessage(session: SupabaseSession, groupId: string, body: string) {
