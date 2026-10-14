@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActivity } from '@/state/activity-context';
 import { isAppVisible, useAutoRefresh } from '@/lib/use-auto-refresh';
 
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChatImage } from '@/components/chat-image';
 import { ImageAttachment } from '@/components/image-attachment';
 import { GroupPlanning } from '@/components/group-planning';
 import { AppShell } from '@/components/app-shell';
-import { Avatar, SectionLabel } from '@/components/ui';
+import { Avatar } from '@/components/ui';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 export default function GroupRoomScreen() {
@@ -24,23 +25,31 @@ export default function GroupRoomScreen() {
   const { error, findGroup, findIntent, loadGroupMessages, messagesByGroup, sendGroupMessage } = useKajora();
   const [messageBody, setMessageBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [atBottom, setAtBottom] = useState(true);
+  const [messagesWhenScrolledAway, setMessagesWhenScrolledAway] = useState(0);
+  const nearBottom = useRef(true);
+  const chat = useRef<ScrollView>(null);
   const group = findGroup(id);
   const intent = group ? findIntent(group.sourcePostId) : undefined;
   const messages = group ? messagesByGroup[group.id] ?? [] : [];
-  const memberInitials = intent
-    ? [...new Set([intent.creator.initials, ...messages.map((message) => message.initials)])].slice(0, 4)
-    : [];
-
   const groupId = group?.id;
   useEffect(() => {
     if (groupId) void loadGroupMessages(groupId);
   }, [groupId, loadGroupMessages]);
 
   const markVisibleRead = useCallback(async () => {
-    if (focused && groupId && isAppVisible()) markRead(groupId);
-  }, [focused, groupId, markRead]);
+    if (focused && !panelOpen && atBottom && groupId && isAppVisible()) markRead(groupId);
+  }, [atBottom, focused, groupId, markRead, panelOpen]);
   useEffect(() => { void markVisibleRead(); }, [markVisibleRead]);
   useAutoRefresh(markVisibleRead, focused && Boolean(groupId));
+
+  const latestMessageId = messages[messages.length - 1]?.id;
+  useEffect(() => {
+    if (!focused || panelOpen || !nearBottom.current) return;
+    const frame = requestAnimationFrame(() => chat.current?.scrollToEnd({ animated: false }));
+    return () => cancelAnimationFrame(frame);
+  }, [focused, latestMessageId, panelOpen]);
 
   if (!intent || !group) return null;
 
@@ -51,36 +60,40 @@ export default function GroupRoomScreen() {
     setSending(true);
     const sendError = await sendGroupMessage(group.id, messageBody);
     setSending(false);
-    if (!sendError) setMessageBody('');
+    if (!sendError) {
+      setMessageBody('');
+      nearBottom.current = true; setAtBottom(true);
+      requestAnimationFrame(() => chat.current?.scrollToEnd({ animated: true }));
+    }
   };
 
   return (
     <AppShell>
-      <View style={styles.page}>
+      <KeyboardAvoidingView style={styles.page} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.back}><Text style={styles.backText}>←</Text></Pressable>
           <View style={styles.headerTitle}>
             <Text style={styles.product}>{intent.product} group</Text>
             <Text style={styles.groupMeta}>{group.memberCount} members · {intent.area}</Text>
           </View>
-          <Pressable><Text style={styles.more}>•••</Text></Pressable>
+
         </View>
 
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <View style={styles.banner}>
-            <Text style={styles.bannerTitle}>Planning, not payment</Text>
-            <Text style={styles.bannerBody}>Interest is still non-binding. Confirm only after everyone reviews the final group plan.</Text>
-          </View>
-
-          <View style={styles.membersRow}>
-            {memberInitials.map((initials) => <Avatar initials={initials} key={initials} size={34} />)}
-            <Text style={styles.membersText}>{group.memberCount} people in this room</Text>
-            <Text style={styles.invite}>Invite</Text>
-          </View>
-
-          <GroupPlanning key={group.id} group={group} intent={intent} focused={focused} />
-
-          <SectionLabel>CONVERSATION</SectionLabel>
+        <GroupPlanning key={group.id} group={group} intent={intent} focused={focused} onPanelChange={setPanelOpen} />
+        <ScrollView ref={chat} style={styles.chat} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled" scrollEventThrottle={100}
+          onScroll={({ nativeEvent }) => {
+            const distance = nativeEvent.contentSize.height - nativeEvent.layoutMeasurement.height - nativeEvent.contentOffset.y;
+            const next = distance < 100;
+            if (nearBottom.current && !next) setMessagesWhenScrolledAway(messages.length);
+            nearBottom.current = next; setAtBottom(next);
+          }}
+          onLayout={() => { if (nearBottom.current && !panelOpen) chat.current?.scrollToEnd({ animated: false }); }}
+          onContentSizeChange={() => { if (nearBottom.current && focused && !panelOpen) chat.current?.scrollToEnd({ animated: false }); }}>
+          {messages.length === 0 ? <View style={styles.empty}>
+            <Text style={styles.product}>Start the conversation</Text>
+            <Text style={styles.bannerBody}>Discuss the product, share a photo or ask the group a question. Plans and polls are just above.</Text>
+          </View> : null}
           <View style={styles.messages}>
             {messages.map((message) => {
               const isOrganiser = Boolean(intent.creatorId && message.authorId === intent.creatorId);
@@ -105,7 +118,12 @@ export default function GroupRoomScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
 
-        {closed ? <Text style={styles.bannerBody}>This purchase is closed. The conversation is read-only.</Text> : <View style={styles.composer}>
+        {!atBottom ? <Pressable accessibilityRole="button" style={styles.jump} onPress={() => {
+          nearBottom.current = true; setAtBottom(true);
+          chat.current?.scrollToEnd({ animated: true });
+        }}><Text style={styles.jumpText}>{messages.length > messagesWhenScrolledAway ? 'New messages ↓' : 'Jump to latest ↓'}</Text></Pressable> : null}
+        <SafeAreaView edges={['bottom']}>
+        {closed ? <Text style={styles.closedNote}>This purchase is closed. The conversation is read-only.</Text> : <View style={styles.composer}>
           <ImageAttachment key={group.id} groupId={group.id} />
           <TextInput
             onChangeText={setMessageBody}
@@ -120,7 +138,8 @@ export default function GroupRoomScreen() {
             <Text style={styles.sendText}>{sending ? '…' : 'Send'}</Text>
           </Pressable>
         </View>}
-      </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </AppShell>
   );
 }
@@ -134,13 +153,15 @@ const styles = StyleSheet.create({
   product: { color: colors.ink, fontSize: type.body, fontWeight: '700' },
   groupMeta: { color: colors.muted, fontSize: 11, marginTop: 3 },
   more: { color: colors.muted, fontSize: 18, letterSpacing: 2 },
-  content: { paddingBottom: spacing.xl, paddingHorizontal: spacing.lg },
+  chat: { flex: 1 },
+  content: { paddingBottom: spacing.md, paddingHorizontal: spacing.md, flexGrow: 1 },
+  empty: { padding: spacing.lg, marginTop: spacing.xl },
+  jump: { alignSelf: 'center', backgroundColor: colors.sageSoft, borderRadius: radius.full, paddingHorizontal: spacing.lg, paddingVertical: 10, marginVertical: spacing.xs },
+  jumpText: { color: colors.greenDark, fontSize: 12, fontWeight: '700' },
+  closedNote: { color: colors.muted, fontSize: 12, lineHeight: 18, padding: spacing.md },
   banner: { backgroundColor: colors.sageSoft, borderRadius: radius.md, marginTop: spacing.md, padding: spacing.md },
   bannerTitle: { color: colors.greenDark, fontSize: type.small, fontWeight: '700' },
   bannerBody: { color: colors.muted, fontSize: type.small, lineHeight: 19, marginTop: 4 },
-  membersRow: { alignItems: 'center', borderBottomColor: colors.line, borderBottomWidth: 1, flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.md },
-  membersText: { color: colors.muted, flex: 1, fontSize: type.small, marginLeft: spacing.md },
-  invite: { color: colors.green, fontSize: type.small, fontWeight: '700' },
   messages: { gap: spacing.md, marginTop: spacing.md },
   messageRow: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.sm },
   messageMine: { justifyContent: 'flex-end' },

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { Button, SectionLabel, StatusPill } from '@/components/ui';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Button, StatusPill } from '@/components/ui';
 import { GroupPolls } from '@/components/group-polls';
 import { fetchGroupWorkspace, planningAction, type GroupWorkspace, type PlanDetails } from '@/lib/supabase-rest';
 import { useAutoRefresh } from '@/lib/use-auto-refresh';
@@ -18,7 +18,9 @@ const fields: { key: keyof PlanDetails; label: string; hint: string }[] = [
   { key: 'date', label: 'Pickup date and time', hint: 'For example: 24 October 2026, 10am' },
 ];
 
-export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; intent: Intent; focused: boolean }) {
+export function GroupPlanning({ group, intent, focused, onPanelChange }: { group: BuyingGroup; intent: Intent; focused: boolean; onPanelChange: (open: boolean) => void }) {
+  const [panel, setPanel] = useState<'plan' | 'polls' | 'members' | null>(null);
+  const openPanel = (next: 'plan' | 'polls' | 'members' | null) => { setPanel(next); onPanelChange(next !== null); };
   const { session, supabaseSession } = useAuth();
   const { refresh } = useKajora();
   const [workspace, setWorkspace] = useState<GroupWorkspace | null>(null);
@@ -88,9 +90,28 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
   const response = plan?.responses.find((item) => item.user_id === session?.userId);
 
   return (
-    <View style={styles.stack}>
-      <SectionLabel>GROUP PLAN</SectionLabel>
-      <View style={styles.card}>
+    <View style={styles.dock}>
+      <View style={styles.tools}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Review group plan" onPress={() => openPanel('plan')} style={styles.tool}>
+          <Text style={styles.label}>Plan</Text>
+          <Text numberOfLines={1} style={styles.summary}>{changes.length ? 'Changes requested' : closed ? (group.state === 'completed' ? 'Completed' : 'Cancelled') : plan?.state === 'confirmed' ? 'Everyone confirmed' : current ? 'Review & confirm' : plan ? 'Needs revision' : 'Not proposed yet'}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Open group polls" onPress={() => openPanel('polls')} style={styles.tool}>
+          <Text style={styles.label}>Polls</Text><Text style={styles.summary}>{workspace ? `${workspace.polls.filter((poll) => !poll.closed).length} open` : 'Loading…'}</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="View group members" onPress={() => openPanel('members')} style={styles.tool}>
+          <Text style={styles.label}>Members</Text><Text style={styles.summary}>{workspace?.members.length ?? group.memberCount} people</Text>
+        </Pressable>
+      </View>
+      {error && !panel ? <Text style={styles.error}>Group details need attention. Tap Plan to retry.</Text> : null}
+      <Modal visible={panel !== null && focused} animationType="slide" onRequestClose={() => { if (!busy) openPanel(null); }}>
+        <View style={styles.panel}>
+          <View style={styles.panelHeader}>
+            <Text style={styles.title}>{panel === 'plan' ? 'Group plan' : panel === 'polls' ? 'Group polls' : 'Group members'}</Text>
+            <Button disabled={busy} label="Back to chat" variant="quiet" onPress={() => openPanel(null)} />
+          </View>
+          <ScrollView contentContainerStyle={styles.panelContent} keyboardShouldPersistTaps="handled">
+      <View style={[styles.card, panel !== 'plan' && styles.hidden]}>
         <Text style={styles.title}>{closed ? (group.state === 'completed' ? 'Purchase completed' : 'Purchase cancelled') : 'Agree the details together'}</Text>
         {notice ? <Text accessibilityLiveRegion="polite" style={styles.label}>{notice}</Text> : null}
         {changes.length > 0 ? <View style={styles.changeNotice}>
@@ -153,12 +174,35 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
           </>}
         </> : null}
       </View>
-      {workspace ? <GroupPolls polls={workspace.polls} members={workspace.members} groupId={group.id} owner={owner} closed={closed} busy={busy} act={act} /> : null}
+      <View style={panel !== 'polls' ? styles.hidden : undefined}>
+        {workspace ? <GroupPolls polls={workspace.polls} members={workspace.members} groupId={group.id} owner={owner} closed={closed} busy={busy} act={act} /> : <Text style={styles.body}>Loading polls…</Text>}
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </View>
+      {panel === 'members' ? <View style={styles.stack}>
+        <Text style={styles.body}>Only approved members can read this conversation.</Text>
+        {workspace?.members.map((member) => <View key={member.user_id} style={styles.member}>
+          <Text style={styles.body}>{member.name}{member.user_id === session?.userId ? ' (you)' : ''}</Text>
+          {member.user_id === intent.creatorId ? <StatusPill label="ORGANISER" tone="green" /> : <Text style={styles.summary}>Member</Text>}
+        </View>)}
+        {!workspace ? <Text style={styles.body}>{error || 'Loading members…'}</Text> : null}
+      </View> : null}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
+  dock: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.line },
+  tools: { flexDirection: 'row', gap: spacing.sm },
+  tool: { flex: 1, backgroundColor: colors.paper, borderRadius: radius.sm, padding: spacing.sm, minHeight: 58 },
+  summary: { color: colors.muted, fontSize: 11, lineHeight: 16 },
+  panel: { flex: 1, backgroundColor: colors.canvas, paddingTop: 48 },
+  panelHeader: { padding: spacing.md, gap: spacing.sm },
+  panelContent: { padding: spacing.md, paddingBottom: 48 },
+  hidden: { display: 'none' },
+  member: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.line, paddingVertical: spacing.md },
   stack: { gap: spacing.md, marginTop: spacing.md },
   changeNotice: { backgroundColor: colors.sageSoft, borderRadius: radius.sm, padding: spacing.md, gap: spacing.sm },
   card: { backgroundColor: colors.paper, borderColor: colors.line, borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: spacing.md },
