@@ -23,6 +23,7 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
   const { refresh } = useKajora();
   const [workspace, setWorkspace] = useState<GroupWorkspace | null>(null);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<PlanDetails | null>(null);
   const [editingVersion, setEditingVersion] = useState(0);
@@ -45,7 +46,7 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
     }
   }, [group.id, supabaseSession]);
   useEffect(() => {
-    if (!supabaseSession) return;
+    if (!supabaseSession || !focused) return;
     const requestGeneration = ++generation.current;
     void fetchGroupWorkspace(supabaseSession, group.id).then((next) => {
       if (requestGeneration === generation.current) { setWorkspace(next); setError(''); }
@@ -53,12 +54,12 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
       if (requestGeneration === generation.current) setError(e instanceof Error ? e.message : 'Could not load this group');
     });
     return () => { generation.current += 1; };
-  }, [group.id, supabaseSession]);
+  }, [focused, group.id, supabaseSession]);
   useAutoRefresh(reload, focused && !busy);
 
   const act = async (action: string, params: Record<string, unknown>): Promise<boolean> => {
     if (!supabaseSession || busy) return false;
-    setBusy(true); setError(''); generation.current += 1;
+    setBusy(true); setError(''); setNotice(''); generation.current += 1;
     try {
       await planningAction(supabaseSession, action, params);
       await Promise.all([reload(), refresh()]);
@@ -83,6 +84,7 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
     }
     if (await act('propose_group_plan', { target_group: group.id, expected_version: editingVersion, details: draft })) setDraft(null);
   };
+  const changes = current ? plan?.responses.filter((item) => item.state === 'declined') ?? [] : [];
   const response = plan?.responses.find((item) => item.user_id === session?.userId);
 
   return (
@@ -90,6 +92,16 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
       <SectionLabel>GROUP PLAN</SectionLabel>
       <View style={styles.card}>
         <Text style={styles.title}>{closed ? (group.state === 'completed' ? 'Purchase completed' : 'Purchase cancelled') : 'Agree the details together'}</Text>
+        {notice ? <Text accessibilityLiveRegion="polite" style={styles.label}>{notice}</Text> : null}
+        {changes.length > 0 ? <View style={styles.changeNotice}>
+          <Text accessibilityLiveRegion="polite" style={styles.label}>Changes requested · {changes.length} {changes.length === 1 ? 'member' : 'members'}</Text>
+          {changes.map((item) => <View key={item.user_id}>
+            <Text style={styles.label}>{workspace?.members.find((member) => member.user_id === item.user_id)?.name ?? 'Member'}</Text>
+            <Text style={styles.body}>{item.response_note}</Text>
+          </View>)}
+          {owner ? <Text style={styles.body}>Review the feedback, then use “Revise the plan” below to publish an updated version.</Text> : null}
+        </View> : null}
+        {workspace ? <Button disabled={busy} variant="quiet" label="Refresh plan and polls" onPress={() => void reload()} /> : null}
         {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
         {!workspace ? <><Text style={styles.body}>{error ? 'Planning could not load. Check that the latest database migration has been run.' : 'Loading the group plan…'}</Text><Button label="Retry" variant="secondary" onPress={() => void reload()} /></> : null}
         {plan ? <>
@@ -112,7 +124,7 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
             {askingChange ? <>
               <TextInput accessibilityLabel="Change requested" multiline maxLength={500} style={styles.input} value={note} onChangeText={setNote} placeholder="What needs to change?" placeholderTextColor={colors.muted} />
               <Button disabled={busy || !note.trim()} label="Send change request" onPress={async () => {
-                if (await act('respond_group_plan', { target_plan: plan.id, agrees: false, note })) { setNote(''); setAskingChange(false); }
+                if (await act('respond_group_plan', { target_plan: plan.id, agrees: false, note })) { setNote(''); setAskingChange(false); setNotice('Change request sent. The organiser can now see your feedback.'); }
               }} />
             </> : null}
           </> : null}
@@ -148,6 +160,7 @@ export function GroupPlanning({ group, intent, focused }: { group: BuyingGroup; 
 
 export const styles = StyleSheet.create({
   stack: { gap: spacing.md, marginTop: spacing.md },
+  changeNotice: { backgroundColor: colors.sageSoft, borderRadius: radius.sm, padding: spacing.md, gap: spacing.sm },
   card: { backgroundColor: colors.paper, borderColor: colors.line, borderWidth: 1, borderRadius: radius.md, padding: spacing.md, gap: spacing.md },
   title: { color: colors.ink, fontSize: type.title, fontWeight: '700' },
   label: { color: colors.greenDark, fontSize: type.small, fontWeight: '700', marginBottom: 3 },
