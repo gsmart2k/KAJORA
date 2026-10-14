@@ -39,7 +39,7 @@ type PostRow = {
   id: string;
   creator_id: string;
   type: 'buying_intent' | 'available_share';
-  state: 'open' | 'forming' | 'planning' | 'awaiting_confirmation';
+  state: 'open' | 'forming' | 'planning' | 'awaiting_confirmation' | 'confirmed' | 'completed' | 'closed';
   category: Intent['category'];
   product: string;
   title: string;
@@ -257,7 +257,7 @@ export async function fetchIntents(session: SupabaseSession) {
   ].join(',');
   const [posts, countRows] = await Promise.all([
     request<PostRow[]>(
-      `/rest/v1/posts?select=${encodeURIComponent(select)}&state=in.(open,forming,planning,awaiting_confirmation)&order=created_at.desc`,
+      `/rest/v1/posts?select=${encodeURIComponent(select)}&state=in.(open,forming,planning,awaiting_confirmation,confirmed,completed,closed)&order=created_at.desc`,
       undefined,
       session.access_token,
     ),
@@ -373,3 +373,25 @@ export async function setJoiningClosed(session: SupabaseSession, postId: string,
   await request('/rest/v1/rpc/set_joining_closed',
     { method: 'POST', body: JSON.stringify({ target_post: postId, closed }) }, session.access_token);
 }
+
+
+export type PlanDetails = { product: string; supplier: string; total: string; allocation: string; pickup: string; date: string };
+export type GroupPlan = {
+  id: string; version: number; state: string; product_specification: string;
+  vendor_details: { supplier: string }; cost_breakdown: { total: number };
+  allocation_breakdown: { description: string }; schedule: { date: string }; fulfilment: { pickup: string };
+  responses: { user_id: string; state: string; response_note: string | null }[];
+};
+export type GroupPoll = {
+  id: string; creator_id: string; question: string; options: string[]; closed: boolean;
+  votes: { user_id: string; choice: number }[];
+};
+export type GroupWorkspace = {
+  members: { user_id: string; name: string }[];
+  plan: GroupPlan | null; polls: GroupPoll[];
+};
+export function planningAction<T = void>(session: SupabaseSession, action: string, params: Record<string, unknown>) {
+  return request<T>(`/rest/v1/rpc/${action}`, { method: 'POST', body: JSON.stringify(params) }, session.access_token);
+}
+export const fetchGroupWorkspace = (session: SupabaseSession, groupId: string) =>
+  planningAction<GroupWorkspace>(session, 'get_group_workspace', { target_group: groupId });

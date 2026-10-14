@@ -5,19 +5,11 @@ import { isAppVisible, useAutoRefresh } from '@/lib/use-auto-refresh';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { GroupPlanning } from '@/components/group-planning';
 import { AppShell } from '@/components/app-shell';
-import { Avatar, Button, SectionLabel, StatusPill } from '@/components/ui';
+import { Avatar, SectionLabel } from '@/components/ui';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
-import type { DecisionState } from '@/types';
-
-const decisionTone: Record<DecisionState, 'green' | 'clay' | 'neutral'> = {
-  Agreed: 'green',
-  Discussing: 'clay',
-  Suggested: 'neutral',
-  'Not discussed': 'neutral',
-};
-
 export default function GroupRoomScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -33,11 +25,6 @@ export default function GroupRoomScreen() {
   const group = findGroup(id);
   const intent = group ? findIntent(group.sourcePostId) : undefined;
   const messages = group ? messagesByGroup[group.id] ?? [] : [];
-  const groupDecisions = ['Product', 'Portions', 'Supplier', 'Final amount', 'Pickup'].map((label) => ({
-    label,
-    value: 'Discuss this together in the conversation',
-    state: 'Not discussed' as const,
-  }));
   const memberInitials = intent
     ? [...new Set([intent.creator.initials, ...messages.map((message) => message.initials)])].slice(0, 4)
     : [];
@@ -55,7 +42,9 @@ export default function GroupRoomScreen() {
 
   if (!intent || !group) return null;
 
+  const closed = ['completed', 'closed'].includes(group.state);
   const send = async () => {
+    if (closed) return;
     if (!messageBody.trim()) return;
     setSending(true);
     const sendError = await sendGroupMessage(group.id, messageBody);
@@ -87,30 +76,7 @@ export default function GroupRoomScreen() {
             <Text style={styles.invite}>Invite</Text>
           </View>
 
-          <View style={styles.sectionHeader}>
-            <SectionLabel>GROUP DECISIONS</SectionLabel>
-            <Text style={styles.sectionAction}>View all</Text>
-          </View>
-          <View style={styles.decisionList}>
-            {groupDecisions.map((decision) => (
-              <View key={decision.label} style={styles.decision}>
-                <View style={styles.decisionText}>
-                  <Text style={styles.decisionLabel}>{decision.label}</Text>
-                  <Text style={styles.decisionValue}>{decision.value}</Text>
-                </View>
-                <StatusPill label={decision.state} tone={decisionTone[decision.state]} />
-              </View>
-            ))}
-          </View>
-
-          <View style={styles.planCard}>
-            <View style={styles.planTop}>
-              <Text style={styles.planTitle}>Final group plan</Text>
-              <StatusPill label="NOT READY" />
-            </View>
-            <Text style={styles.planBody}>Agree the supplier and final amount before preparing a plan for everyone to confirm.</Text>
-            <Button disabled label="Prepare group plan" onPress={() => {}} variant="secondary" />
-          </View>
+          <GroupPlanning key={group.id} group={group} intent={intent} focused={focused} />
 
           <SectionLabel>CONVERSATION</SectionLabel>
           <View style={styles.messages}>
@@ -136,7 +102,7 @@ export default function GroupRoomScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
         </ScrollView>
 
-        <View style={styles.composer}>
+        {closed ? <Text style={styles.bannerBody}>This purchase is closed. The conversation is read-only.</Text> : <View style={styles.composer}>
           <TextInput
             onChangeText={setMessageBody}
             onSubmitEditing={() => void send()}
@@ -149,7 +115,7 @@ export default function GroupRoomScreen() {
           <Pressable disabled={sending || !messageBody.trim()} onPress={() => void send()} style={[styles.send, (sending || !messageBody.trim()) && styles.sendDisabled]}>
             <Text style={styles.sendText}>{sending ? '…' : 'Send'}</Text>
           </Pressable>
-        </View>
+        </View>}
       </View>
     </AppShell>
   );
@@ -171,17 +137,6 @@ const styles = StyleSheet.create({
   membersRow: { alignItems: 'center', borderBottomColor: colors.line, borderBottomWidth: 1, flexDirection: 'row', gap: spacing.xs, paddingVertical: spacing.md },
   membersText: { color: colors.muted, flex: 1, fontSize: type.small, marginLeft: spacing.md },
   invite: { color: colors.green, fontSize: type.small, fontWeight: '700' },
-  sectionHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.lg },
-  sectionAction: { color: colors.green, fontSize: type.small, fontWeight: '600' },
-  decisionList: { borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, marginTop: spacing.md, overflow: 'hidden' },
-  decision: { alignItems: 'center', backgroundColor: colors.paper, borderBottomColor: colors.line, borderBottomWidth: 1, flexDirection: 'row', padding: spacing.md },
-  decisionText: { flex: 1 },
-  decisionLabel: { color: colors.muted, fontSize: 11 },
-  decisionValue: { color: colors.ink, fontSize: type.small, fontWeight: '600', marginTop: 4 },
-  planCard: { backgroundColor: colors.paper, borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, gap: spacing.md, marginVertical: spacing.lg, padding: spacing.md },
-  planTop: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  planTitle: { color: colors.ink, fontSize: type.title, fontWeight: '700' },
-  planBody: { color: colors.muted, fontSize: type.small, lineHeight: 20 },
   messages: { gap: spacing.md, marginTop: spacing.md },
   messageRow: { alignItems: 'flex-end', flexDirection: 'row', gap: spacing.sm },
   messageMine: { justifyContent: 'flex-end' },

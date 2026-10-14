@@ -43,14 +43,13 @@ export default function GroupsScreen() {
                   <Text style={styles.cardTitle}>{intent.product} group</Text>
                   <Text style={styles.cardMeta}>{intent.area} · {group.memberCount} members</Text>
                 </View>
-                <StatusPill label={group.state.replace('-', ' ').toUpperCase()} tone="green" />
+                <StatusPill label={(group.state === 'closed' ? 'cancelled' : group.state).replace('-', ' ').toUpperCase()} tone="green" />
               </View>
               {newGroups.includes(group.id) ? <Text style={styles.discover}>You’re in · Open your group</Text> : null}
               {(unread[group.id] ?? 0) > 0 ? <Text style={styles.discover}>{unread[group.id]} unread {unread[group.id] === 1 ? 'message' : 'messages'}</Text> : null}
               <Text numberOfLines={2} style={styles.cardBody}>{intent.title}</Text>
-              <View style={styles.progressTrack}><View style={[styles.progress, { width: group.state === 'planning' ? '55%' : '30%' }]} /></View>
               <View style={styles.cardFooter}>
-                <Text style={styles.nextStep}>{group.state === 'planning' ? 'Next: agree supplier and final amount' : 'Next: gather more interested people'}</Text>
+                <Text style={styles.nextStep}>{group.state === 'completed' ? 'Purchase completed' : group.state === 'closed' ? 'Purchase cancelled' : group.state === 'confirmed' ? 'Everyone has confirmed the plan' : group.state === 'awaiting-confirmation' ? 'Review and confirm the proposed plan' : 'Discuss the purchase and prepare a plan'}</Text>
                 <Text style={styles.arrow}>→</Text>
               </View>
             </Pressable>

@@ -10,6 +10,7 @@ import type { Intent } from '@/types';
 export function JoinRequests({ intent }: { intent: Intent }) {
   const { supabaseSession } = useAuth();
   const { refresh, requestsByIntent } = useKajora();
+  const planningLocked = ['awaiting-confirmation', 'confirmed', 'completed', 'closed'].includes(intent.status);
   const requests = requestsByIntent[intent.id] ?? [];
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -29,13 +30,13 @@ export function JoinRequests({ intent }: { intent: Intent }) {
       {requests.map((person) => (
         <View key={person.user_id} style={{ gap: spacing.sm }}>
           <Text>{person.display_name}</Text>
-          <Button disabled={busy || intent.joiningClosed} label={`Approve ${person.display_name}`}
+          <Button disabled={busy || intent.joiningClosed || planningLocked} label={`Approve ${person.display_name}`}
             onPress={() => act(() => reviewJoinRequest(supabaseSession, intent.id, person.user_id, true))} />
           <Button disabled={busy} label={`Decline ${person.display_name}`} variant="secondary"
             onPress={() => act(() => reviewJoinRequest(supabaseSession, intent.id, person.user_id, false))} />
         </View>
       ))}
-      <Button disabled={busy} label={intent.joiningClosed ? 'Reopen joining' : 'Close joining'} variant="secondary"
+      <Button disabled={busy || planningLocked} label={planningLocked ? 'Joining paused for this plan' : intent.joiningClosed ? 'Reopen joining' : 'Close joining'} variant="secondary"
         onPress={() => act(() => setJoiningClosed(supabaseSession, intent.id, !intent.joiningClosed))} />
       {error ? <Text style={{ color: colors.danger }}>{error}</Text> : null}
     </View>

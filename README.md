@@ -354,6 +354,8 @@ Future project documentation may include:
 
 **Persistent multi-user alpha with Supabase email accounts.**
 
-The account onboarding flow, intent-first model, visual system, main screens, persisted demo mode, Supabase authentication, database persistence, automatic group creation, and group conversation are implemented. Phone verification remains on the roadmap for the public pilot once a suitable SMS provider is available.
+The account onboarding flow, intent-first model, visual system, main screens, Supabase authentication, database persistence, automatic group creation, and group conversation are implemented. Phone verification remains on the roadmap for the public pilot once a suitable SMS provider is available.
 
 See [Approved membership rollout](docs/JOIN_APPROVAL.md) for organiser approval, optional total group sizes, migration order, and the three-account privacy test.
+
+See [Group plans and polls](docs/PLANS_AND_POLLS.md) for the required migration, final-plan confirmations, polls and purchase closure.

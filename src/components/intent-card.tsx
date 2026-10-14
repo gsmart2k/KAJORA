@@ -57,7 +57,7 @@ export function IntentCard({ intent, onPress }: { intent: Intent; onPress: () =>
             <Text style={styles.createdAgo}>{intent.createdAgo}</Text>
           </View>
         </View>
-        <StatusPill label={available ? 'AVAILABLE' : 'OPEN'} tone={available ? 'clay' : 'green'} />
+        <StatusPill label={intent.joiningClosed ? 'JOINING CLOSED' : available ? 'AVAILABLE' : intent.status.replace('-', ' ').toUpperCase()} tone={available ? 'clay' : 'green'} />
       </View>
     </Pressable>
   );

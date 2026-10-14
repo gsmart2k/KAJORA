@@ -24,6 +24,7 @@ export default function HomeScreen() {
   const visibleIntents = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return intents.filter((intent) => {
+      if (['completed', 'closed', 'confirmed'].includes(intent.status)) return false;
       const matchesCategory = category === 'All' || intent.category === category;
       const matchesQuery =
         !normalized ||

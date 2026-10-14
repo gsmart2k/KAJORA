@@ -1,6 +1,6 @@
 export type IntentCategory = 'Livestock' | 'Foodstuff' | 'Household';
 export type PostType = 'buying-intent' | 'available-share';
-export type IntentStatus = 'open' | 'forming' | 'planning' | 'awaiting-confirmation';
+export type IntentStatus = 'open' | 'forming' | 'planning' | 'awaiting-confirmation' | 'confirmed' | 'completed' | 'closed';
 
 export type Intent = {
   id: string;

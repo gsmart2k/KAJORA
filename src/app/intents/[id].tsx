@@ -32,6 +32,7 @@ export default function IntentDetailScreen() {
   const isOwner = Boolean(intent.creatorId && intent.creatorId === session?.userId);
   const group = getGroupForIntent(intent.id);
   const pending = interested && !group;
+  const closed = ['completed', 'closed'].includes(intent.status);
   const available = intent.type === 'available-share';
 
   const handleInterest = async () => {
@@ -108,7 +109,7 @@ export default function IntentDetailScreen() {
 
         <View style={styles.actions}>
           <Button
-            disabled={!group && (isOwner || pending || intent.joiningClosed)}
+            disabled={!group && (isOwner || pending || intent.joiningClosed || closed)}
             label={group ? 'Open private group' : isOwner ? 'You started this plan' : pending ? 'Awaiting approval' : intent.joiningClosed ? 'Joining closed' : 'Request to join'}
             loading={loading}
             onPress={handleInterest}
@@ -116,7 +117,7 @@ export default function IntentDetailScreen() {
           {error ? <Text style={styles.error}>{error}</Text> : null}
           <Text style={styles.interestHelp}>Chat access requires organiser approval.</Text>
           <Button label="Refresh status" variant="secondary" onPress={refresh} />
-          {isOwner ? <JoinRequests intent={intent} /> : null}
+          {isOwner && !closed ? <JoinRequests intent={intent} /> : null}
           {interested && !isOwner ? (
             <Button label={pending ? "Cancel request" : "Leave group"} onPress={() => void withdrawInterest(intent.id)} variant="secondary" />
           ) : null}
