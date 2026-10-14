@@ -1,6 +1,6 @@
 import { useActivity } from '@/state/activity-context';
 import type { PropsWithChildren } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -43,7 +43,7 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
                   styles.floatingAction,
                   pressed && styles.floatingActionPressed,
                 ]}>
-                <SymbolView name={addSymbol} size={25} tintColor={colors.white} />
+                <SymbolView name={addSymbol} size={25} tintColor={colors.ink} />
                 <Text style={styles.floatingActionLabel}>Start</Text>
               </Pressable>
             ) : null}
@@ -87,7 +87,7 @@ export function AppShell({ children, activeRoute = 'none' }: PropsWithChildren<{
 }
 
 const styles = StyleSheet.create({
-  page: { backgroundColor: Platform.OS === 'web' ? '#E9EFEA' : colors.canvas, flex: 1 },
+  page: { backgroundColor: colors.canvas, flex: 1 },
   shell: {
     alignSelf: 'center',
     backgroundColor: colors.canvas,
@@ -136,6 +136,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   floatingActionPressed: { opacity: 0.86, transform: [{ scale: 0.96 }] },
-  floatingActionLabel: { color: colors.white, fontSize: 9, fontWeight: '800', marginTop: -1 },
+  floatingActionLabel: { color: colors.ink, fontSize: 9, fontWeight: '800', marginTop: -1 },
   pressed: { opacity: 0.76 },
 });

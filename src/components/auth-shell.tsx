@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
   frame: { alignSelf: 'center', maxWidth: 470, width: '100%' },
   intro: { marginTop: spacing.xl },
-  eyebrow: { color: colors.clay, fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
+  eyebrow: { color: colors.green, fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, lineHeight: 33, marginTop: spacing.sm },
   description: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm, maxWidth: 420 },
   card: {

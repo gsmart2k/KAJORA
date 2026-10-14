@@ -1,19 +1,16 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing, type } from '@/theme';
 
 export function Wordmark({ compact = false }: { compact?: boolean }) {
   return (
-    <View accessibilityLabel="KAJORA" style={styles.wordmarkRow}>
-      <View style={[styles.wordmarkMark, compact && styles.wordmarkMarkCompact]}>
-        <Text style={[styles.wordmarkK, compact && styles.wordmarkKCompact]}>K</Text>
-      </View>
-      <View>
-        <Text style={[styles.wordmark, compact && styles.wordmarkCompact]}>KAJORA</Text>
-        {!compact && <Text style={styles.wordmarkLine}>let’s buy together</Text>}
-      </View>
-    </View>
+    <Image
+      accessibilityLabel="KAJORA — let’s buy together"
+      source={compact ? require('../../assets/brand/logo-horizontal.png') : require('../../assets/brand/logo-stacked.png')}
+      resizeMode="contain"
+      style={compact ? { width: 138, height: 32 } : { width: 170, height: 110 }}
+    />
   );
 }
 
@@ -78,14 +75,6 @@ export function StatusPill({ label, tone = 'neutral' }: { label: string; tone?: 
 }
 
 const styles = StyleSheet.create({
-  wordmarkRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm },
-  wordmarkMark: { alignItems: 'center', backgroundColor: colors.clay, borderRadius: 12, height: 34, justifyContent: 'center', width: 34 },
-  wordmarkMarkCompact: { borderRadius: 10, height: 30, width: 30 },
-  wordmarkK: { color: colors.white, fontSize: 19, fontWeight: '900' },
-  wordmarkKCompact: { fontSize: 16 },
-  wordmark: { color: colors.greenDark, fontSize: 18, fontWeight: '900', letterSpacing: 1.5 },
-  wordmarkCompact: { fontSize: 16, letterSpacing: 1.3 },
-  wordmarkLine: { color: colors.muted, fontSize: 8, fontWeight: '600', letterSpacing: 0.15, marginTop: -1 },
   button: {
     alignItems: 'center',
     borderRadius: radius.md,
@@ -95,7 +84,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     paddingHorizontal: spacing.lg,
   },
-  button_primary: { backgroundColor: colors.clay },
+  button_primary: { backgroundColor: colors.green },
   button_secondary: { backgroundColor: colors.paper, borderColor: colors.line, borderWidth: 1 },
   button_quiet: { backgroundColor: colors.sageSoft },
   button_danger: { backgroundColor: colors.claySoft },
@@ -116,5 +105,5 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 9, fontWeight: '800', letterSpacing: 0.2 },
   pillText_neutral: { color: colors.muted },
   pillText_green: { color: colors.greenDark },
-  pillText_clay: { color: colors.clay },
+  pillText_clay: { color: colors.ink },
 });
