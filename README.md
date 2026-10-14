@@ -359,3 +359,5 @@ The account onboarding flow, intent-first model, visual system, main screens, Su
 See [Approved membership rollout](docs/JOIN_APPROVAL.md) for organiser approval, optional total group sizes, migration order, and the three-account privacy test.
 
 See [Group plans and polls](docs/PLANS_AND_POLLS.md) for the required migration, final-plan confirmations, polls and purchase closure.
+
+See [Private chat photos](docs/CHAT_IMAGES.md) for photo attachments, private storage setup and testing.

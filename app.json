@@ -30,6 +30,14 @@
         {
           "backgroundColor": "#F4F0E6"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose photos to share with your KAJORA group.",
+          "cameraPermission": "Take a photo to share with your KAJORA group.",
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

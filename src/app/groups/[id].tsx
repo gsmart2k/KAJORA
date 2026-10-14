@@ -5,6 +5,8 @@ import { isAppVisible, useAutoRefresh } from '@/lib/use-auto-refresh';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { ChatImage } from '@/components/chat-image';
+import { ImageAttachment } from '@/components/image-attachment';
 import { GroupPlanning } from '@/components/group-planning';
 import { AppShell } from '@/components/app-shell';
 import { Avatar, SectionLabel } from '@/components/ui';
@@ -92,7 +94,8 @@ export default function GroupRoomScreen() {
                       {isOrganiser && <Text style={styles.organiserBadge}>Organiser</Text>}
                     </View>
                   )}
-                  <Text style={styles.messageBody}>{message.body}</Text>
+                  {message.imagePath ? <ChatImage path={message.imagePath} focused={focused} /> : null}
+                  {message.body ? <Text style={styles.messageBody}>{message.body}</Text> : null}
                   <Text style={styles.messageTime}>{message.time}</Text>
                 </View>
               </View>
@@ -103,6 +106,7 @@ export default function GroupRoomScreen() {
         </ScrollView>
 
         {closed ? <Text style={styles.bannerBody}>This purchase is closed. The conversation is read-only.</Text> : <View style={styles.composer}>
+          <ImageAttachment key={group.id} groupId={group.id} />
           <TextInput
             onChangeText={setMessageBody}
             onSubmitEditing={() => void send()}

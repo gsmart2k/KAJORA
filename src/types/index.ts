@@ -57,6 +57,7 @@ export type GroupDecision = {
 
 export type GroupMessage = {
   id: string;
+  imagePath?: string;
   authorId?: string;
   createdAt?: string;
   author: string;

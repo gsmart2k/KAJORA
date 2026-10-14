@@ -47,7 +47,7 @@ type KajoraContextValue = DataState & {
   findGroup: (id: string) => BuyingGroup | undefined;
   getGroupForIntent: (intentId: string) => BuyingGroup | undefined;
   loadGroupMessages: (groupId: string) => Promise<void>;
-  sendGroupMessage: (groupId: string, body: string) => Promise<string | null>;
+  sendGroupMessage: (groupId: string, body: string, imagePath?: string) => Promise<string | null>;
   refresh: () => Promise<void>;
 };
 
@@ -267,6 +267,7 @@ export function KajoraProvider({ children }: PropsWithChildren) {
             author,
             authorId: row.author_id,
             createdAt: row.created_at,
+            imagePath: row.image_path ?? undefined,
             body: row.body,
             id: row.id,
             initials: initialsFor(author) || 'KJ',
@@ -286,21 +287,22 @@ export function KajoraProvider({ children }: PropsWithChildren) {
   );
 
   const sendGroupMessage = useCallback(
-    async (groupId: string, body: string) => {
+    async (groupId: string, body: string, imagePath?: string) => {
       const trimmed = body.trim();
-      if (!trimmed) return 'Write a message first.';
+      if (!trimmed && !imagePath) return 'Write a message or choose an image first.';
       setError('');
       try {
         let message: GroupMessage;
         if (backendMode === 'supabase') {
           if (!supabaseSession || !session) throw new Error('Your session expired. Please sign in again.');
-          const row = await sendRemoteMessage(supabaseSession, groupId, trimmed);
+          const row = await sendRemoteMessage(supabaseSession, groupId, trimmed, imagePath);
           if (!row) throw new Error('The message could not be sent.');
           const author = row.author?.display_name ?? session.name;
           message = {
             author,
             authorId: row.author_id,
             createdAt: row.created_at,
+            imagePath: row.image_path ?? undefined,
             body: row.body,
             id: row.id,
             initials: initialsFor(author) || 'KJ',

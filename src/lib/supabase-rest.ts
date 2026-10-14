@@ -67,6 +67,7 @@ export type RemoteGroup = {
 };
 
 export type RemoteMessage = {
+  image_path: string | null;
   id: string;
   group_id: string;
   author_id: string;
@@ -333,7 +334,7 @@ export async function withdrawRemoteInterest(session: SupabaseSession, postId: s
 }
 
 export async function fetchRemoteMessages(session: SupabaseSession, groupId: string) {
-  const select = 'id,group_id,author_id,body,created_at,author:profiles!group_messages_author_id_fkey(display_name)';
+  const select = 'id,group_id,author_id,body,image_path,created_at,author:profiles!group_messages_author_id_fkey(display_name)';
   const messages: RemoteMessage[] = [];
   // Explicit pages prevent the API's row limit from hiding newer messages.
   for (let offset = 0; ; offset += 500) {
@@ -347,8 +348,9 @@ export async function fetchRemoteMessages(session: SupabaseSession, groupId: str
   }
 }
 
-export async function sendRemoteMessage(session: SupabaseSession, groupId: string, body: string) {
-  const select = 'id,group_id,author_id,body,created_at,author:profiles!group_messages_author_id_fkey(display_name)';
+export async function sendRemoteMessage(session: SupabaseSession, groupId: string, body: string, imagePath?: string) {
+  if (imagePath) return planningAction<RemoteMessage>(session, 'send_group_image', { target_group: groupId, object_path: imagePath, caption: body });
+  const select = 'id,group_id,author_id,body,image_path,created_at,author:profiles!group_messages_author_id_fkey(display_name)';
   const rows = await request<RemoteMessage[]>(
     `/rest/v1/group_messages?select=${encodeURIComponent(select)}`,
     {
@@ -395,3 +397,35 @@ export function planningAction<T = void>(session: SupabaseSession, action: strin
 }
 export const fetchGroupWorkspace = (session: SupabaseSession, groupId: string) =>
   planningAction<GroupWorkspace>(session, 'get_group_workspace', { target_group: groupId });
+
+
+export function uploadGroupImage(session: SupabaseSession, path: string, bytes: ArrayBuffer, onProgress: (percent: number) => void) {
+  const config = requireConfig();
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${config.url}/storage/v1/object/group-images/${path}`);
+    xhr.setRequestHeader('apikey', config.key);
+    xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+    xhr.setRequestHeader('Content-Type', 'image/jpeg');
+    xhr.timeout = 120000;
+    xhr.upload.onprogress = (event) => { if (event.lengthComputable) onProgress(Math.round(event.loaded / event.total * 100)); };
+    xhr.onerror = () => reject(new Error('Upload interrupted. Check your connection and retry.'));
+    xhr.ontimeout = () => reject(new Error('Upload timed out. Please retry.'));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) { onProgress(100); resolve(); }
+      else {
+        let message = 'Image upload failed. Please retry.';
+        try { const error = JSON.parse(xhr.responseText); message = error.message ?? error.error ?? message; } catch { /* Keep safe fallback. */ }
+        reject(new Error(message));
+      }
+    };
+    xhr.send(bytes);
+  });
+}
+
+export async function signGroupImage(session: SupabaseSession, path: string) {
+  const result = await request<{ signedURL: string }>(`/storage/v1/object/sign/group-images/${path}`, {
+    method: 'POST', body: JSON.stringify({ expiresIn: 60 }),
+  }, session.access_token);
+  return `${requireConfig().url}/storage/v1${result.signedURL}`;
+}
