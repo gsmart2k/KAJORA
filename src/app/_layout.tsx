@@ -33,7 +33,7 @@ function RootNavigator() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={{ alignItems: 'center', backgroundColor: colors.canvas, flex: 1, justifyContent: 'center' }}>
+      <SafeAreaView style={{ alignItems: 'center', backgroundColor: colors.white, flex: 1, justifyContent: 'center' }}>
         <Wordmark />
       </SafeAreaView>
     );

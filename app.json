@@ -27,7 +27,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F6F1E7",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/brand/logo-stacked.png",
           "imageWidth": 180,
           "resizeMode": "contain"

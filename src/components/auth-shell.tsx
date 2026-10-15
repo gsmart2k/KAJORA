@@ -10,9 +10,10 @@ type AuthShellProps = PropsWithChildren<{
   title: string;
   description: string;
   footer?: ReactNode;
+  showLogo?: boolean;
 }>;
 
-export function AuthShell({ children, eyebrow, title, description, footer }: AuthShellProps) {
+export function AuthShell({ children, eyebrow, title, description, footer, showLogo = true }: AuthShellProps) {
   return (
     <SafeAreaView style={styles.page}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.keyboard}>
@@ -21,8 +22,8 @@ export function AuthShell({ children, eyebrow, title, description, footer }: Aut
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           <View style={styles.frame}>
-            <Wordmark />
-            <View style={styles.intro}>
+            {showLogo ? <Wordmark /> : null}
+            <View style={[styles.intro, !showLogo && styles.introWithoutLogo]}>
               <Text style={styles.eyebrow}>{eyebrow}</Text>
               <Text style={styles.title}>{title}</Text>
               <Text style={styles.description}>{description}</Text>
@@ -42,6 +43,7 @@ const styles = StyleSheet.create({
   scroll: { flexGrow: 1, justifyContent: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
   frame: { alignSelf: 'center', maxWidth: 470, width: '100%' },
   intro: { marginTop: spacing.xl },
+  introWithoutLogo: { marginTop: 0 },
   eyebrow: { color: colors.green, fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
   title: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, lineHeight: 33, marginTop: spacing.sm },
   description: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm, maxWidth: 420 },

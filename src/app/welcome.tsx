@@ -16,6 +16,7 @@ export default function WelcomeScreen() {
 
   return (
     <AuthShell
+      showLogo={false}
       description="Start a buying plan, find nearby people and split a bulk purchase without buying more than you need."
       eyebrow="Made for Osun communities"
       title="Good things cost less when we share."
