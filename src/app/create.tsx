@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { useRouter } from 'expo-router';
 
 import { AppShell } from '@/components/app-shell';
-import { Button, SectionLabel, Wordmark } from '@/components/ui';
+import { Button, SectionLabel } from '@/components/ui';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 import type { IntentCategory } from '@/types';
@@ -56,7 +56,6 @@ export default function CreateScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <Wordmark compact />
             <Pressable onPress={() => router.back()}><Text style={styles.cancel}>Cancel</Text></Pressable>
           </View>
 
@@ -140,7 +139,7 @@ function Field({ label, multiline = false, ...inputProps }: { label: string; mul
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingBottom: spacing.xxl, paddingHorizontal: spacing.lg },
-  header: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing.md },
+  header: { alignItems: 'center', flexDirection: 'row', justifyContent: 'flex-end', paddingTop: spacing.md },
   cancel: { color: colors.muted, fontSize: type.small, fontWeight: '600' },
   eyebrow: { color: colors.green, fontSize: 10, fontWeight: '800', letterSpacing: 1.1, marginTop: spacing.lg },
   heading: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, lineHeight: 33, marginTop: spacing.xs },

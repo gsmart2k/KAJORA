@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
-import { Avatar, Button, StatusPill, Wordmark } from '@/components/ui';
+import { Avatar, Button, StatusPill } from '@/components/ui';
 import { useAuth } from '@/state/auth-context';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
@@ -15,7 +15,6 @@ export default function ProfileScreen() {
   return (
     <AppShell activeRoute="profile">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Wordmark compact />
         <View style={styles.profileHeader}>
           <Avatar initials={initials} size={54} />
           <View style={styles.profileText}>

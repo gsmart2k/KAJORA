@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 
 import { AppShell } from '@/components/app-shell';
 import { IntentCard } from '@/components/intent-card';
-import { Wordmark } from '@/components/ui';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 
@@ -38,21 +37,6 @@ export default function HomeScreen() {
   return (
     <AppShell activeRoute="home">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.topRow}>
-          <Wordmark compact />
-          <View style={styles.headerActions}>
-            <Pressable accessibilityRole="button" style={styles.locationButton}>
-              <Text style={styles.locationPin}>●</Text>
-              <Text style={styles.locationText}>Osogbo</Text>
-              <Text style={styles.chevron}>⌄</Text>
-            </Pressable>
-            <Pressable accessibilityLabel="Notifications" accessibilityRole="button" style={styles.notificationButton}>
-              <Text style={styles.bell}>♢</Text>
-              <View style={styles.alertDot} />
-            </Pressable>
-          </View>
-        </View>
-
         <View style={styles.hero}>
           <View style={styles.heroCopy}>
             <Text style={styles.eyebrow}>BUY SMARTER, TOGETHER</Text>

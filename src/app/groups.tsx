@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
-import { Wordmark } from '@/components/ui';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 
@@ -19,7 +18,6 @@ export default function GroupsScreen() {
   return (
     <AppShell activeRoute="groups">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Wordmark compact />
         <Text style={styles.heading}>Your groups</Text>
         <Text style={styles.lede}>Your shared purchases, all in one place.</Text>
 
@@ -71,7 +69,7 @@ export default function GroupsScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: spacing.xxl, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
-  heading: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, marginTop: spacing.lg },
+  heading: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, marginTop: spacing.sm },
   lede: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm },
   list: { gap: spacing.md, marginTop: spacing.lg },
   card: { backgroundColor: colors.paper, borderColor: colors.line, borderRadius: 18, borderWidth: 1, padding: 18 },

@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { JoinRequests } from '@/components/join-requests';
 import { AppShell } from '@/components/app-shell';
-import { Avatar, Button, SectionLabel, StatusPill, Wordmark } from '@/components/ui';
+import { Avatar, Button, SectionLabel, StatusPill } from '@/components/ui';
 import { useAuth } from '@/state/auth-context';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
@@ -53,7 +53,6 @@ export default function IntentDetailScreen() {
           <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.back}>
             <Text style={styles.backText}>←</Text>
           </Pressable>
-          <Wordmark compact />
           <Text style={styles.share}>Share</Text>
         </View>
 
