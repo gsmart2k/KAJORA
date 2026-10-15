@@ -7,7 +7,7 @@ export function Wordmark({ compact = false }: { compact?: boolean }) {
   return (
     <Image
       accessibilityLabel="KAJORA — let’s buy together"
-      source={compact ? require('../../assets/brand/symbol.png') : require('../../assets/brand/splash-supplied.png')}
+      source={compact ? require('../../assets/brand/symbol.png') : require('../../assets/brand/splash-symbol-only.png')}
       resizeMode="contain"
       style={compact ? { width: 35, height: 32 } : { width: 170, height: 110 }}
     />
