@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
-import { Avatar, StatusPill, Wordmark } from '@/components/ui';
+import { Wordmark } from '@/components/ui';
 import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 
@@ -21,7 +21,7 @@ export default function GroupsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Wordmark compact />
         <Text style={styles.heading}>Your groups</Text>
-        <Text style={styles.lede}>People you’re planning a purchase with. Nothing here is a payment commitment.</Text>
+        <Text style={styles.lede}>Your shared purchases, all in one place.</Text>
 
         <View style={styles.list}>
           {Object.entries(requestsByIntent).filter(([, requests]) => requests.length > 0).map(([id, requests]) => (
@@ -35,22 +35,22 @@ export default function GroupsScreen() {
           {groupItems.map(({ group, intent }) => (
             <Pressable
               key={group.id}
+              accessibilityRole="button"
+              accessibilityLabel={`${intent.title}, ${group.memberCount} members${(unread[group.id] ?? 0) > 0 ? `, ${unread[group.id]} unread messages` : ''}`}
               onPress={() => router.push({ pathname: '/groups/[id]', params: { id: group.id } })}
               style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
               <View style={styles.cardTop}>
-                <Avatar initials={intent.creator.initials} />
-                <View style={styles.cardTitleWrap}>
-                  <Text style={styles.cardTitle}>{intent.product} group</Text>
-                  <Text style={styles.cardMeta}>{intent.area} · {group.memberCount} members</Text>
-                </View>
-                <StatusPill label={(group.state === 'closed' ? 'cancelled' : group.state).replace('-', ' ').toUpperCase()} tone="green" />
+                <Text numberOfLines={1} style={styles.productLabel}>{intent.product}</Text>
+                {(unread[group.id] ?? 0) > 0 ? (
+                  <View style={styles.unreadBadge}><Text style={styles.unreadText}>{unread[group.id]} new</Text></View>
+                ) : newGroups.includes(group.id) ? <Text style={styles.newLabel}>Just joined</Text> : null}
               </View>
-              {newGroups.includes(group.id) ? <Text style={styles.discover}>You’re in · Open your group</Text> : null}
-              {(unread[group.id] ?? 0) > 0 ? <Text style={styles.discover}>{unread[group.id]} unread {unread[group.id] === 1 ? 'message' : 'messages'}</Text> : null}
-              <Text numberOfLines={2} style={styles.cardBody}>{intent.title}</Text>
+              <Text numberOfLines={2} style={styles.groupTitle}>{intent.title}</Text>
+              <Text numberOfLines={1} style={styles.cardMeta}>{intent.area} · {group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}</Text>
               <View style={styles.cardFooter}>
-                <Text style={styles.nextStep}>{group.state === 'completed' ? 'Purchase completed' : group.state === 'closed' ? 'Purchase cancelled' : group.state === 'confirmed' ? 'Everyone has confirmed the plan' : group.state === 'awaiting-confirmation' ? 'Review and confirm the proposed plan' : 'Discuss the purchase and prepare a plan'}</Text>
-                <Text style={styles.arrow}>→</Text>
+                <View style={[styles.statusDot, (group.state === 'closed' || group.state === 'completed') && styles.inactiveDot]} />
+                <Text style={styles.nextStep}>{group.state === 'completed' ? 'Completed' : group.state === 'closed' ? 'Cancelled' : group.state === 'confirmed' ? 'Plan confirmed' : group.state === 'awaiting-confirmation' ? 'Plan ready to review' : 'Planning together'}</Text>
+                <Text style={styles.openLabel}>Open chat <Text style={styles.arrow}>›</Text></Text>
               </View>
             </Pressable>
           ))}
@@ -74,17 +74,22 @@ const styles = StyleSheet.create({
   heading: { color: colors.ink, fontSize: type.display, fontWeight: '700', letterSpacing: -0.55, marginTop: spacing.lg },
   lede: { color: colors.muted, fontSize: type.body, lineHeight: 21, marginTop: spacing.sm },
   list: { gap: spacing.md, marginTop: spacing.lg },
-  card: { backgroundColor: colors.paper, borderColor: colors.line, borderRadius: radius.md, borderWidth: 1, padding: spacing.md },
+  card: { backgroundColor: colors.paper, borderColor: colors.line, borderRadius: 18, borderWidth: 1, padding: 18 },
   pressed: { opacity: 0.8 },
   cardTop: { alignItems: 'center', flexDirection: 'row' },
-  cardTitleWrap: { flex: 1, marginLeft: spacing.sm },
+  productLabel: { color: colors.green, flex: 1, fontSize: 11, fontWeight: '700', letterSpacing: 0.6, marginRight: spacing.sm },
+  groupTitle: { color: colors.ink, fontSize: 17, fontWeight: '600', lineHeight: 24, marginTop: 10 },
+  unreadBadge: { backgroundColor: colors.green, borderRadius: 12, paddingHorizontal: 9, paddingVertical: 4 },
+  unreadText: { color: colors.white, fontSize: 10, fontWeight: '700' },
+  newLabel: { color: colors.green, fontSize: 11, fontWeight: '600' },
+  statusDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.sageGreen, marginRight: 7 },
+  inactiveDot: { backgroundColor: colors.muted },
+  openLabel: { color: colors.green, fontSize: 11, fontWeight: '600', marginLeft: 10 },
   cardTitle: { color: colors.ink, fontSize: type.body, fontWeight: '700' },
-  cardMeta: { color: colors.muted, fontSize: 11, marginTop: 3 },
+  cardMeta: { color: colors.muted, fontSize: 12, marginTop: 7 },
   cardBody: { color: colors.ink, fontSize: type.title, fontWeight: '700', lineHeight: 23, marginTop: spacing.md },
-  progressTrack: { backgroundColor: colors.quiet, borderRadius: 3, height: 5, marginTop: spacing.md, overflow: 'hidden' },
-  progress: { backgroundColor: colors.green, height: '100%' },
-  cardFooter: { alignItems: 'center', flexDirection: 'row', marginTop: spacing.md },
-  nextStep: { color: colors.muted, flex: 1, fontSize: type.small },
+  cardFooter: { alignItems: 'center', flexDirection: 'row', marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.line },
+  nextStep: { color: colors.muted, flex: 1, fontSize: 11 },
   arrow: { color: colors.green, fontSize: 20 },
   empty: { borderColor: colors.line, borderRadius: radius.lg, borderWidth: 1, marginTop: spacing.xl, padding: spacing.xl },
   emptyTitle: { color: colors.ink, fontSize: type.title, fontWeight: '700' },
