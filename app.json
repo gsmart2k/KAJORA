@@ -4,11 +4,11 @@
     "slug": "kajora",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/brand/launch-symbol-only.png",
+    "icon": "./assets/brand/launch-supplied.png",
     "scheme": "kajora",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/brand/launch-symbol-only.png"
+      "icon": "./assets/brand/launch-supplied.png"
     },
     "android": {
       "adaptiveIcon": {
@@ -28,7 +28,7 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "image": "./assets/brand/splash-symbol-only.png",
+          "image": "./assets/brand/splash-supplied.png",
           "imageWidth": 180,
           "resizeMode": "contain"
         }
