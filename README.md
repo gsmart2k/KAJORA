@@ -361,3 +361,7 @@ See [Approved membership rollout](docs/JOIN_APPROVAL.md) for organiser approval,
 See [Group plans and polls](docs/PLANS_AND_POLLS.md) for the required migration, final-plan confirmations, polls and purchase closure.
 
 See [Private chat photos](docs/CHAT_IMAGES.md) for photo attachments, private storage setup and testing.
+
+### Safety and moderation
+
+The pilot requires meeting and inspecting before payment. Reporting, private admin review, account suspension and audit records are documented in [Safety and moderation](docs/SAFETY_AND_MODERATION.md). Apply `202610160001_safety_and_moderation.sql` and assign your admin account as described there before testing these features.

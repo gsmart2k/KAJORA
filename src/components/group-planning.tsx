@@ -1,3 +1,4 @@
+import { PaymentSafety } from '@/components/payment-safety';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button, StatusPill } from '@/components/ui';
@@ -14,8 +15,8 @@ const fields: { key: keyof PlanDetails; label: string; hint: string }[] = [
   { key: 'supplier', label: 'Supplier', hint: 'Name and collection/contact details' },
   { key: 'total', label: 'Total cost (₦)', hint: 'Include transport and other agreed costs' },
   { key: 'allocation', label: 'Each person’s share and cost', hint: 'List each member, their portion and amount in naira' },
-  { key: 'pickup', label: 'Pickup location', hint: 'Where everyone will collect their share' },
-  { key: 'date', label: 'Pickup date and time', hint: 'For example: 24 October 2026, 10am' },
+  { key: 'pickup', label: 'Meeting and collection location', hint: 'A public place to inspect the product and collect shares' },
+  { key: 'date', label: 'Meeting date and time', hint: 'For example: 24 October 2026, 10am' },
 ];
 
 export function GroupPlanning({ group, intent, focused, onPanelChange }: { group: BuyingGroup; intent: Intent; focused: boolean; onPanelChange: (open: boolean) => void }) {
@@ -112,6 +113,7 @@ export function GroupPlanning({ group, intent, focused, onPanelChange }: { group
           </View>
           <ScrollView contentContainerStyle={styles.panelContent} keyboardShouldPersistTaps="handled">
       <View style={[styles.card, panel !== 'plan' && styles.hidden]}>
+        <PaymentSafety />
         <Text style={styles.title}>{closed ? (group.state === 'completed' ? 'Purchase completed' : 'Purchase cancelled') : 'Agree the details together'}</Text>
         {notice ? <Text accessibilityLiveRegion="polite" style={styles.label}>{notice}</Text> : null}
         {changes.length > 0 ? <View style={styles.changeNotice}>
@@ -139,7 +141,7 @@ export function GroupPlanning({ group, intent, focused, onPanelChange }: { group
             {item.response_note ? <Text style={styles.body}>{item.response_note}</Text> : null}
           </View>)}
           {!closed && current ? <>
-            <Text style={styles.body}>Confirmation records your agreement to these details. KAJORA does not collect payment.</Text>
+            <Text style={styles.body}>Confirmation agrees to the plan, not a request to pay. Meet, inspect and agree on shares before paying. No advance payments.</Text>
             <Button disabled={busy || response?.state === 'confirmed'} label={response?.state === 'confirmed' ? 'You confirmed this version' : 'Confirm this plan'} onPress={() => void act('respond_group_plan', { target_plan: plan.id, agrees: true })} />
             <Button disabled={busy} variant="secondary" label="Request a change" onPress={() => setAskingChange(!askingChange)} />
             {askingChange ? <>

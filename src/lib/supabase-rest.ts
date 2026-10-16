@@ -28,6 +28,7 @@ export type SupabaseSession = {
 };
 
 export type RemoteProfile = {
+  account_state: string;
   id: string;
   display_name: string;
   discovery_area: string | null;
@@ -176,7 +177,7 @@ export async function signOutSupabase(session: SupabaseSession | null) {
 
 export async function fetchProfile(session: SupabaseSession) {
   const rows = await request<RemoteProfile[]>(
-    `/rest/v1/profiles?id=eq.${session.user.id}&select=id,display_name,discovery_area,phone_verified,completed_groups`,
+    `/rest/v1/profiles?id=eq.${session.user.id}&select=id,display_name,discovery_area,phone_verified,completed_groups,account_state`,
     undefined,
     session.access_token,
   );
@@ -188,7 +189,7 @@ export async function updateProfile(
   profile: { name: string; location: string },
 ) {
   const rows = await request<RemoteProfile[]>(
-    `/rest/v1/profiles?id=eq.${session.user.id}&select=id,display_name,discovery_area,phone_verified,completed_groups`,
+    `/rest/v1/profiles?id=eq.${session.user.id}&select=id,display_name,discovery_area,phone_verified,completed_groups,account_state`,
     {
       body: JSON.stringify({ display_name: profile.name, discovery_area: profile.location }),
       headers: { Prefer: 'return=representation' },
@@ -429,3 +430,13 @@ export async function signGroupImage(session: SupabaseSession, path: string) {
   }, session.access_token);
   return `${requireConfig().url}/storage/v1${result.signedURL}`;
 }
+
+export type SafetyReport = {
+  id: string; subject_type: string; subject_id: string; category: string; details: string;
+  status: string; created_at: string; subject_name?: string; subject_account_state?: string;
+  snapshot: { title?: string; description?: string; body?: string; image_path?: string };
+  actions?: { id: string; action: string; note: string; created_at: string }[];
+};
+export const fetchMySafetyReports = (session: SupabaseSession) => request<SafetyReport[]>(
+  `/rest/v1/reports?reporter_id=eq.${session.user.id}&select=id,subject_type,subject_id,category,details,status,created_at,snapshot&order=created_at.desc&limit=50`, undefined, session.access_token,
+);

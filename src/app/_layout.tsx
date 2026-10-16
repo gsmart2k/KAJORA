@@ -1,8 +1,9 @@
+import { Text } from 'react-native';
 import { ActivityProvider } from '@/state/activity-context';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
-import { Wordmark } from '@/components/ui';
+import { Button, Wordmark } from '@/components/ui';
 import { AuthProvider, useAuth } from '@/state/auth-context';
 import { KajoraProvider } from '@/state/kajora-context';
 import { colors } from '@/theme';
@@ -29,7 +30,7 @@ function AccountContent() {
 }
 
 function RootNavigator() {
-  const { isLoading, session } = useAuth();
+  const { isLoading, session, signOut } = useAuth();
 
   if (isLoading) {
     return (
@@ -38,6 +39,14 @@ function RootNavigator() {
       </SafeAreaView>
     );
   }
+
+  if (session?.accountState === 'suspended') return (
+    <SafeAreaView style={{ flex: 1, justifyContent: 'center', padding: 24, gap: 16, backgroundColor: colors.canvas }}>
+      <Text style={{ color: colors.ink, fontSize: 22, fontWeight: '700' }}>Account suspended</Text>
+      <Text style={{ color: colors.muted, fontSize: 14, lineHeight: 21 }}>Your access is paused following a safety review. Contact the KAJORA pilot organiser to request a review.</Text>
+      <Button label="Sign out" onPress={() => void signOut()} />
+    </SafeAreaView>
+  );
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.canvas } }}>
@@ -55,6 +64,7 @@ function RootNavigator() {
         <Stack.Screen name="groups/[id]" />
         <Stack.Screen name="intents/[id]" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="safety" />
       </Stack.Protected>
     </Stack>
   );

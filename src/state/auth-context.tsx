@@ -1,3 +1,4 @@
+import { useAutoRefresh } from '@/lib/use-auto-refresh';
 import {
   createContext,
   type PropsWithChildren,
@@ -22,6 +23,7 @@ import {
 const DEMO_SESSION_KEY = 'kajora.demo.session.v3';
 
 export type KajoraSession = {
+  accountState?: string;
   userId: string;
   email: string;
   name: string;
@@ -51,6 +53,7 @@ function sessionFromProfile(remote: SupabaseSession, profile: Awaited<ReturnType
     profile?.discovery_area && profile.display_name && profile.display_name !== 'New member',
   );
   return {
+    accountState: profile?.account_state ?? 'active',
     email: remote.user.email ?? '',
     location: profile?.discovery_area ?? 'Osogbo, Osun State',
     mode: 'supabase',
@@ -93,6 +96,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
       mounted = false;
     };
   }, []);
+
+  const refreshAccountStatus = useCallback(async () => {
+    if (!supabaseSession) return;
+    try {
+      const profile = await fetchProfile(supabaseSession);
+      if (profile) setSession(current => current && current.userId === supabaseSession.user.id && current.accountState !== profile.account_state ? { ...current, accountState: profile.account_state } : current);
+    } catch { /* Database policies still enforce suspension if this refresh is offline. */ }
+  }, [supabaseSession]);
+  useAutoRefresh(refreshAccountStatus, Boolean(supabaseSession));
 
   const authenticateWithEmail = useCallback(
     async (email: string, password: string) => {

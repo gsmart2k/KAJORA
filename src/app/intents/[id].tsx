@@ -1,3 +1,5 @@
+import { ReportAction } from '@/components/report-action';
+import { PaymentSafety } from '@/components/payment-safety';
 import { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -73,12 +75,14 @@ export default function IntentDetailScreen() {
           </Text>
         </View>
 
+        <PaymentSafety />
+        {intent.creatorId !== session?.userId ? <ReportAction kind="post" target={intent.id} label="Report this intention" /> : null}
         <View style={styles.creatorCard}>
           <Avatar initials={intent.creator.initials} size={48} />
           <View style={styles.creatorBody}>
             <Text style={styles.creatorName}>Posted by {intent.creator.name}</Text>
             <Text style={styles.creatorMeta}>
-              {intent.creator.phoneVerified ? 'Identity verified' : 'KAJORA account'} · {intent.creator.completedGroups} completed {intent.creator.completedGroups === 1 ? 'group' : 'groups'}
+              {intent.creator.phoneVerified ? 'Phone confirmed' : 'KAJORA account'} · {intent.creator.completedGroups} completed {intent.creator.completedGroups === 1 ? 'group' : 'groups'}
             </Text>
           </View>
         </View>

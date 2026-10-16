@@ -1,3 +1,5 @@
+import { ReportAction } from '@/components/report-action';
+import { PaymentSafety } from '@/components/payment-safety';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useActivity } from '@/state/activity-context';
 import { isAppVisible, useAutoRefresh } from '@/lib/use-auto-refresh';
@@ -79,6 +81,7 @@ export default function GroupRoomScreen() {
 
         </View>
 
+        <PaymentSafety compact />
         <GroupPlanning key={group.id} group={group} intent={intent} focused={focused} onPanelChange={setPanelOpen} />
         <ScrollView ref={chat} style={styles.chat} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled" scrollEventThrottle={100}
@@ -110,6 +113,7 @@ export default function GroupRoomScreen() {
                   {message.imagePath ? <ChatImage path={message.imagePath} focused={focused} /> : null}
                   {message.body ? <Text style={styles.messageBody}>{message.body}</Text> : null}
                   <Text style={styles.messageTime}>{message.time}</Text>
+                  {!message.mine ? <ReportAction kind="message" target={message.id} label="Report message" /> : null}
                 </View>
               </View>
               );

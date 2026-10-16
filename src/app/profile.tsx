@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { AppShell } from '@/components/app-shell';
@@ -7,6 +8,7 @@ import { useKajora } from '@/state/kajora-context';
 import { colors, radius, spacing, type } from '@/theme';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { session, signOut } = useAuth();
   const { groups, intents } = useKajora();
   const name = session?.name || 'KAJORA member';
@@ -43,7 +45,7 @@ export default function ProfileScreen() {
           <Text style={styles.identityText}>
             An active account does not mean a product, organiser or seller has been inspected. Trust grows through completed groups and clear agreements.
           </Text>
-          <Button label="Review verification" onPress={() => {}} variant="secondary" />
+          <Button label="Safety centre and reports" onPress={() => router.push('/safety')} variant="secondary" />
         </View>
 
         <View style={styles.signOut}>

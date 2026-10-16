@@ -1,3 +1,4 @@
+import { PaymentSafety } from '@/components/payment-safety';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -65,6 +66,7 @@ export default function CreateScreen() {
             You do not need a seller or final price yet. Start with what you know; the group can decide the rest.
           </Text>
 
+          <PaymentSafety />
           <View style={styles.form}>
             <View>
               <SectionLabel>CATEGORY</SectionLabel>
